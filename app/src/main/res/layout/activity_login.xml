@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="32dp"
+    android:gravity="center"
+    android:background="#B2EBF2"
+    android:id="@+id/registration"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".AuthActivity"
+    >
+
+    <!-- Заголовок -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Войти в аккаунт"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:layout_marginBottom="40dp" />
+
+    <!-- Поле для логина -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Введите логин"
+        android:textSize="16sp"
+        android:textColor="#000000"
+        android:layout_marginBottom="8dp" />
+
+    <EditText
+        android:id="@+id/user_login_auth"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/edittext_background"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textSize="16sp"
+        android:layout_marginBottom="16dp" />
+
+
+    <!-- Поле для пароля -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Введите пароль"
+        android:textSize="16sp"
+        android:textColor="#000000"
+        android:layout_marginBottom="8dp" />
+
+    <EditText
+        android:id="@+id/user_pass_auth"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/edittext_background"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:inputType="textPassword"
+        android:textSize="16sp"
+        android:layout_marginBottom="32dp" />
+
+    <!-- Кнопка регистрации -->
+    <Button
+        android:id="@+id/btn_auth"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Войти"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:background="#000000"
+        android:textColor="#FFFFFF"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/link_reg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="120dp"
+        android:layout_marginBottom="8dp"
+        android:text="Создать аккаунт"
+        android:textColor="#1B1B1B"
+        android:textSize="16sp" />
+
+</LinearLayout>

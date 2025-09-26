@@ -30,7 +30,7 @@ class AuthActivity : Activity() {
 
 
             if (login == "" || pass == "")
-                Toast.makeText(this, "Не все полоя заполнены", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Не все поля заполнены", Toast.LENGTH_LONG).show()
             else {
 
                 val intent = Intent(this, StartActivity::class.java)

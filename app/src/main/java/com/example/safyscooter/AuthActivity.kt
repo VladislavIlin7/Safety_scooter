@@ -27,15 +27,15 @@ class AuthActivity : Activity() {
             val user_phone = userPhoneAuth.text.toString().trim()
             val pass = userPassAuth.text.toString().trim()
 
-
-
             if (user_phone == "" || pass == "")
                 Toast.makeText(this, "Не все поля заполнены", Toast.LENGTH_LONG).show()
             else {
+                // проверка номера и пароля
+
+
                 val intent = Intent(this, StartActivity::class.java)
                 startActivity(intent)
             }
-
         }
     }
 }

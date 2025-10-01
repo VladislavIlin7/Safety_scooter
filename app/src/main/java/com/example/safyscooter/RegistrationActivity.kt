@@ -13,12 +13,9 @@ class RegistrationActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_registration)
 
-
-        val userLogin: EditText = findViewById(R.id.user_login)
-        val userEmail: EditText = findViewById(R.id.user_email)
+        val userPhone: EditText = findViewById(R.id.user_phone)
         val userPass: EditText = findViewById(R.id.user_pass)
         val btnReg: Button = findViewById(R.id.btn_register)
-
         val linkToAuth: TextView = findViewById(R.id.link_auth)
 
         linkToAuth.setOnClickListener {
@@ -26,17 +23,16 @@ class RegistrationActivity : Activity() {
             startActivity(intent)
         }
 
+        btnReg.setOnClickListener {
 
-        btnReg.setOnClickListener{
-            val login = userLogin.text.toString().trim()
-            val email = userEmail.text.toString().trim()
+            val phone_number = userPhone.text.toString().trim()
             val pass = userPass.text.toString().trim()
 
 
-            if(login == "" || email == "" || pass == "")
-                Toast.makeText(this, "Не все полоя заполнены", Toast.LENGTH_LONG).show()
-            else{
-                val user = User(login, email,pass)
+            if (phone_number == "" || pass == "")
+                Toast.makeText(this, "Не все поля заполнены", Toast.LENGTH_LONG).show()
+            else {
+                val user = User(phone_number, pass)
 
                 val intent = Intent(this, StartActivity::class.java)
                 startActivity(intent)

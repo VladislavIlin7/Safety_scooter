@@ -17,7 +17,7 @@ class StartActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start)
 
-        val recordButton: Button = findViewById(R.id.recordButton)
+        val recordButton: Button = findViewById(R.id.record_button)
 
         recordButton.setOnClickListener {
             val takeVideoIntent = Intent(MediaStore.ACTION_VIDEO_CAPTURE)

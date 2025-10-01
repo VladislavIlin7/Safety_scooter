@@ -28,7 +28,11 @@ class AuthActivity : Activity() {
             val pass = userPassAuth.text.toString().trim()
 
 
+<<<<<<< HEAD
             if (user_phone == "" || pass == "")
+=======
+            if (login == "" || pass == "")
+>>>>>>> ea4c2da6bfb752bac1637dd0425aa28e2002e61f
                 Toast.makeText(this, "Не все поля заполнены", Toast.LENGTH_LONG).show()
             else {
 

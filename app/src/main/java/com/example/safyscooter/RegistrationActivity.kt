@@ -18,8 +18,6 @@ class RegistrationActivity : Activity() {
         val btnReg: Button = findViewById(R.id.btn_register)
         val linkToAuth: TextView = findViewById(R.id.link_auth)
 
-        print(1)
-
         linkToAuth.setOnClickListener {
             val intent = Intent(this, AuthActivity::class.java)
             startActivity(intent)

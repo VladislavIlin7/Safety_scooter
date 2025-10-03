@@ -4,65 +4,52 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:layout_height="match_parent">
 
-    <!-- Preview камеры -->
-    <TextureView
-        android:id="@+id/camera_preview"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/controls_layout"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Контролы -->
-    <LinearLayout
-        android:id="@+id/controls_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:padding="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <!-- Кнопка записи -->
-        <ImageButton
-            android:id="@+id/record_button"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:background="@drawable/record_button_bg"
-            android:src="@drawable/ic_record"
-            android:layout_marginEnd="16dp" />
-
-        <!-- Таймер -->
-        <TextView
-            android:id="@+id/timer_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="00:15"
-            android:textSize="24sp"
-            android:textColor="@android:color/white"
-            android:textStyle="bold" />
-
-    </LinearLayout>
-
-    <!-- Сообщение о максимальной длительности -->
-    <TextView
-        android:id="@+id/max_duration_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Макс. длительность: 15 сек"
-        android:textSize="14sp"
+    <!-- Кнопка Личный кабинет -->
+    <Button
+        android:id="@+id/btnProfile"
+        android:layout_width="80dp"
+        android:layout_height="40dp"
+        android:text="Личный\nкаб"
+        android:backgroundTint="#00BFA5"
         android:textColor="@android:color/white"
-        android:background="@android:color/black"
-        android:padding="8dp"
-        android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:layout_margin="16dp"/>
 
+    <!-- Таймер -->
+    <Chronometer
+        android:id="@+id/timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textColor="@android:color/holo_red_light"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/btnProfile"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="16dp"/>
+
+    <!-- Камера -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/btnProfile"
+        app:layout_constraintBottom_toTopOf="@id/btnRec"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Кнопка REC -->
+    <Button
+        android:id="@+id/btnRec"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:text="REC"
+        android:backgroundTint="#FF0000"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="32dp"
+        tools:ignore="HardcodedText" />
 </androidx.constraintlayout.widget.ConstraintLayout>

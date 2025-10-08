@@ -96,9 +96,16 @@ class AuthActivity : Activity() {
                         }
                     } else if (response.code == 404) {
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(this@AuthActivity, "Неверный номер/пароль",
+                            Toast.makeText(this@AuthActivity, "Неверный номер",
                                 Toast.LENGTH_SHORT).show()
 
+                        }
+                    } else if (response.code == 403) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                this@AuthActivity, "Неверный пароль",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     } else {
                         withContext(Dispatchers.Main) {

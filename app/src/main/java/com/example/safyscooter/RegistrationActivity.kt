@@ -16,7 +16,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import okhttp3.ResponseBody.Companion.toResponseBody
 
 class RegistrationActivity : Activity() {
     private val client = OkHttpClient()
@@ -44,23 +43,23 @@ class RegistrationActivity : Activity() {
             val password = userPass.text.toString().trim()
 
             if (phoneNumber.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Не все поля заполнены", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Не все поля заполнены", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             if (!Validators.validateRussinPhone(phoneNumber)) {
                 Toast.makeText(this, "Номер телефона должен содержать 10 цифр (не включая +7)",
-                    Toast.LENGTH_LONG).show()
+                    Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             if(!Validators.validatePassword(password)) {
                 Toast.makeText(this, "Пароль должен состоять из 8-16 символов и включать только цифры и латиницу",
-                    Toast.LENGTH_LONG).show()
+                    Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val formattedPhone = "+7$phoneNumber"
+            val formattedPhone = "$phoneNumber"
             val user = User(formattedPhone, password)
 
             CoroutineScope(Dispatchers.IO).launch {
@@ -76,7 +75,7 @@ class RegistrationActivity : Activity() {
                 val requestBody = jsonBody.toRequestBody("application/json; charset=utf-8".toMediaType())
 
                 val request = Request.Builder()
-                    .url("http://89.169.177.162/registration")
+                    .url("https://safetyscooter.ru//registration")
                     .post(requestBody)
                     .build()
 
@@ -94,10 +93,15 @@ class RegistrationActivity : Activity() {
                             val intent = Intent(this@RegistrationActivity, StartActivity::class.java)
                             startActivity(intent)
                         }
+                    } else if (response.code == 409) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@RegistrationActivity, "Такой пользователь уже есть",
+                                Toast.LENGTH_SHORT).show()
+                        }
                     } else {
                         withContext(Dispatchers.Main) {
                             Toast.makeText(this@RegistrationActivity, "Ошибка регистрации: ${response.code}",
-                                Toast.LENGTH_LONG).show()
+                                Toast.LENGTH_SHORT).show()
 
                         }
                     }
@@ -105,7 +109,7 @@ class RegistrationActivity : Activity() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@RegistrationActivity, "Сетевая ошибка: ${e.message}",
-                        Toast.LENGTH_LONG).show()
+                        Toast.LENGTH_SHORT).show()
                 }
             }
         }

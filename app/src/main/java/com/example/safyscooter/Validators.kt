@@ -23,7 +23,9 @@ object Validators {
         }
 
         for (char in password) {
-            if (!char.isLetterOrDigit() || !char.isLatinLetter()) {
+            if (char.isDigit() || char.isLatinLetter()) {
+                continue
+            } else {
                 return false
             }
         }

@@ -24,22 +24,18 @@ class StartActivity : AppCompatActivity() {
         val recordButton: ImageButton = findViewById(R.id.record_button)
 
         recordButton.setOnClickListener {
-            // При КАЖДОМ нажатии проверяем разрешение
             checkCameraPermission()
         }
     }
 
     private fun checkCameraPermission() {
-        // Проверяем, есть ли уже разрешение
         if (ContextCompat.checkSelfPermission(
                 this,
                 android.Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            // Разрешение есть - запускаем камеру
             launchCamera()
         } else {
-            // Разрешения нет - запрашиваем его ПРИ КАЖДОМ нажатии
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(android.Manifest.permission.CAMERA),
@@ -48,7 +44,6 @@ class StartActivity : AppCompatActivity() {
         }
     }
 
-    // Этот метод вызывается после того как пользователь ответил на запрос разрешения
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -58,12 +53,9 @@ class StartActivity : AppCompatActivity() {
 
         when (requestCode) {
             CAMERA_PERMISSION_CODE -> {
-                // Проверяем, дал ли пользователь разрешение
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Разрешение дано - запускаем камеру
                     launchCamera()
                 }
-                // Если разрешение не дано - ничего не делаем, но при следующем нажатии снова запросим
             }
         }
     }
@@ -81,7 +73,6 @@ class StartActivity : AppCompatActivity() {
 
         if (requestCode == REQUEST_VIDEO_CAPTURE && resultCode == Activity.RESULT_OK) {
             videoUri = data?.data
-            // здесь в videoUri путь к записанному видео
         }
     }
 }

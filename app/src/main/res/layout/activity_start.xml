@@ -4,19 +4,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:background="#B2EBF2"
     android:layout_height="match_parent">
 
     <!-- Кнопка Личный кабинет -->
     <Button
         android:id="@+id/btnProfile"
-        android:layout_width="80dp"
+        android:layout_width="40dp"
         android:layout_height="40dp"
-        android:text="Личный\nкаб"
-        android:backgroundTint="#00BFA5"
+        android:background="@drawable/human"
         android:textColor="@android:color/white"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="16dp"/>
+        android:layout_margin="8dp"/>
 
     <!-- Таймер -->
     <Chronometer
@@ -43,7 +43,7 @@
     <!-- Кнопка REC -->
     <Button
         android:id="@+id/btnRec"
-        android:layout_width="80dp"
+        android:layout_width="75dp"
         android:layout_height="80dp"
         android:text="REC"
         android:backgroundTint="#FF0000"

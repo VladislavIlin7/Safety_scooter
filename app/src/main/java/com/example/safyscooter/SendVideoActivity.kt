@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 
 class SendVideoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,7 +15,7 @@ class SendVideoActivity : AppCompatActivity() {
         val videoView: VideoView = findViewById(R.id.videoView)
 
         if (videoPath != null) {
-            videoView.setVideoURI(Uri.parse(videoPath))
+            videoView.setVideoURI(videoPath.toUri())
             videoView.start()
         }
     }

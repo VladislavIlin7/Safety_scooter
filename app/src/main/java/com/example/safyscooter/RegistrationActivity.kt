@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
-import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -30,7 +29,6 @@ class RegistrationActivity : Activity() {
         val userPass: EditText = findViewById(R.id.user_pass)
         val btnReg: Button = findViewById(R.id.btn_register)
         val linkToAuth: TextView = findViewById(R.id.link_auth)
-        val rememberMeCheckbox: CheckBox = findViewById(R.id.rememberMeCheckbox)
 
         userPhone.setText("+7")
         userPhone.setSelection(userPhone.text.length)
@@ -43,22 +41,21 @@ class RegistrationActivity : Activity() {
         btnReg.setOnClickListener {
             val phoneNumber = userPhone.text.toString().trim()
             val password = userPass.text.toString().trim()
-            val rememberMe = rememberMeCheckbox.isChecked
 
             if (phoneNumber.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Не все поля заполнены", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Не все поля заполнены", Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
 
             if (!Validators.validateRussianPhone(phoneNumber)) {
                 Toast.makeText(this, "Номер телефона должен содержать 10 цифр (не включая +7)",
-                    Toast.LENGTH_SHORT).show()
+                    Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
 
             if(!Validators.validatePassword(password)) {
                 Toast.makeText(this, "Пароль должен состоять из 8-16 символов и включать только цифры и латиницу",
-                    Toast.LENGTH_SHORT).show()
+                    Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
 
@@ -66,12 +63,12 @@ class RegistrationActivity : Activity() {
             val user = User(formattedPhone, password)
 
             CoroutineScope(Dispatchers.IO).launch {
-                registerUser(user, rememberMe)
+                registerUser(user)
             }
         }
     }
 
-    private suspend fun registerUser(user: User, rememberMe: Boolean) {
+    private suspend fun registerUser(user: User) {
         withContext(Dispatchers.IO) {
             try {
                 val jsonBody = gson.toJson(user)
@@ -86,51 +83,42 @@ class RegistrationActivity : Activity() {
                     if (response.code == 200) {
                         val responseBody = response.body?.string()
                         val authResponse = gson.fromJson(responseBody, AuthResponse::class.java)
-                        val accessToken = authResponse.auth_access
+                        val accessToken = authResponse.access_token
 
                         saveAccessToken(accessToken)
-                        saveRememberMePreference(rememberMe)
 
                         withContext(Dispatchers.Main) {
                             Toast.makeText(this@RegistrationActivity, "Регистрация успешна!",
-                                Toast.LENGTH_SHORT).show()
+                                Toast.LENGTH_LONG).show()
                             val intent = Intent(this@RegistrationActivity, StartActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             startActivity(intent)
-                            finish()
                         }
                     } else if (response.code == 409) {
                         withContext(Dispatchers.Main) {
                             Toast.makeText(this@RegistrationActivity, "Такой пользователь уже есть",
-                                Toast.LENGTH_SHORT).show()
+                                Toast.LENGTH_LONG).show()
                         }
                     } else {
                         withContext(Dispatchers.Main) {
                             Toast.makeText(this@RegistrationActivity, "Ошибка регистрации: ${response.code}",
-                                Toast.LENGTH_SHORT).show()
+                                Toast.LENGTH_LONG).show()
                         }
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@RegistrationActivity, "Сетевая ошибка: ${e.message}",
-                        Toast.LENGTH_SHORT).show()
+                        Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
 
     private fun saveAccessToken(token: String) {
-        val sharedPref = getSharedPreferences("apps_prefs", MODE_PRIVATE)
+        val sharedPref = getSharedPreferences("app_prefs", MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("access_token", token)
-            apply()
-        }
-    }
-
-    private fun saveRememberMePreference(rememberMe: Boolean) {
-        val sharedPref = getSharedPreferences("apps_prefs", MODE_PRIVATE)
-        with(sharedPref.edit()) {
-            putBoolean("remember_me", rememberMe)
             apply()
         }
     }

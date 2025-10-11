@@ -62,18 +62,8 @@
         android:paddingEnd="16dp"
         android:inputType="textPassword"
         android:textSize="16sp"
-        android:layout_marginBottom="1dp" />
+        android:layout_marginBottom="32dp" />
 
-    <CheckBox
-        android:id="@+id/rememberMeCheckbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Запомнить меня"
-        android:textColor="@color/black"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"/>
-
-    <!-- Кнопка регистрации -->
     <Button
         android:id="@+id/btn_register"
         android:layout_width="match_parent"

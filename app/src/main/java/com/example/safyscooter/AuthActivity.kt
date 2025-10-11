@@ -114,8 +114,8 @@ class AuthActivity : Activity() {
                         }
                     } else {
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(this@AuthActivity, "Ошибка авторизации: ${response.message}",
-                                Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@AuthActivity, "Ошибка авторизации: ${response.code}",
+                                Toast.LENGTH_LONG).show()
 
                         }
                     }
@@ -123,7 +123,7 @@ class AuthActivity : Activity() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@AuthActivity, "Сетевая ошибка: ${e.message}",
-                        Toast.LENGTH_SHORT).show()
+                        Toast.LENGTH_LONG).show()
                 }
             }
         }

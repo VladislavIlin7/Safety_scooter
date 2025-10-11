@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -30,6 +31,7 @@ class AuthActivity : Activity() {
         val userPassAuth: EditText = findViewById(R.id.user_pass_auth)
         val btnAuth: Button = findViewById(R.id.btn_auth)
         val linkToReg: TextView = findViewById(R.id.link_reg)
+        val rememberMeCheckbox: CheckBox = findViewById(R.id.rememberMeCheckbox)
 
         userPhoneAuth.setText("+7")
         userPhoneAuth.setSelection(userPhoneAuth.text.length)
@@ -42,13 +44,14 @@ class AuthActivity : Activity() {
         btnAuth.setOnClickListener {
             val phoneNumber = userPhoneAuth.text.toString().trim()
             val password = userPassAuth.text.toString().trim()
+            val rememberMe = rememberMeCheckbox.isChecked
 
             if (phoneNumber.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Не все поля заполнены", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            if (!Validators.validateRussinPhone(phoneNumber)) {
+            if (!Validators.validateRussianPhone(phoneNumber)) {
                 Toast.makeText(this, "Номер телефона должен содержать 10 цифр (не включая +7)",
                     Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -64,12 +67,12 @@ class AuthActivity : Activity() {
             val user = User(formattedPhone, password)
 
             CoroutineScope(Dispatchers.IO).launch {
-                AuthUser(user)
+                AuthUser(user, rememberMe)
             }
         }
     }
 
-    private suspend fun AuthUser(user: User) {
+    private suspend fun AuthUser(user: User, rememberMe: Boolean) {
         withContext(Dispatchers.IO) {
             try {
                 val jsonBody = gson.toJson(user)
@@ -87,12 +90,14 @@ class AuthActivity : Activity() {
                         val accessToken = authResponse.auth_access
 
                         saveAccessToken(accessToken)
+                        saveRememberMePreference(rememberMe)
 
                         withContext(Dispatchers.Main) {
                             Toast.makeText(this@AuthActivity, "Авторизация успешна!",
                                 Toast.LENGTH_SHORT).show()
                             val intent = Intent(this@AuthActivity, StartActivity::class.java)
                             startActivity(intent)
+                            finish()
                         }
                     } else if (response.code == 404) {
                         withContext(Dispatchers.Main) {
@@ -128,6 +133,14 @@ class AuthActivity : Activity() {
         val sharedPref = getSharedPreferences("app_prefs", MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("access_token", token)
+            apply()
+        }
+    }
+
+    private fun saveRememberMePreference(rememberMe: Boolean) {
+        val sharedPref = getSharedPreferences("apps_prefs", MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putBoolean("remember_me", rememberMe)
             apply()
         }
     }

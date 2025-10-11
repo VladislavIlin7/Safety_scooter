@@ -1,7 +1,7 @@
 package com.example.safyscooter
 
 object Validators {
-    fun validateRussinPhone(phone: String): Boolean {
+    fun validateRussianPhone(phone: String): Boolean {
         if (phone.length != 12 || !phone.startsWith("+7")) {
             return false
         }

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -29,6 +30,7 @@ class RegistrationActivity : Activity() {
         val userPass: EditText = findViewById(R.id.user_pass)
         val btnReg: Button = findViewById(R.id.btn_register)
         val linkToAuth: TextView = findViewById(R.id.link_auth)
+        val rememberMeCheckbox: CheckBox = findViewById(R.id.rememberMeCheckbox)
 
         userPhone.setText("+7")
         userPhone.setSelection(userPhone.text.length)
@@ -41,13 +43,14 @@ class RegistrationActivity : Activity() {
         btnReg.setOnClickListener {
             val phoneNumber = userPhone.text.toString().trim()
             val password = userPass.text.toString().trim()
+            val rememberMe = rememberMeCheckbox.isChecked
 
             if (phoneNumber.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Не все поля заполнены", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            if (!Validators.validateRussinPhone(phoneNumber)) {
+            if (!Validators.validateRussianPhone(phoneNumber)) {
                 Toast.makeText(this, "Номер телефона должен содержать 10 цифр (не включая +7)",
                     Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -63,12 +66,12 @@ class RegistrationActivity : Activity() {
             val user = User(formattedPhone, password)
 
             CoroutineScope(Dispatchers.IO).launch {
-                registerUser(user)
+                registerUser(user, rememberMe)
             }
         }
     }
 
-    private suspend fun registerUser(user: User) {
+    private suspend fun registerUser(user: User, rememberMe: Boolean) {
         withContext(Dispatchers.IO) {
             try {
                 val jsonBody = gson.toJson(user)
@@ -86,12 +89,14 @@ class RegistrationActivity : Activity() {
                         val accessToken = authResponse.auth_access
 
                         saveAccessToken(accessToken)
+                        saveRememberMePreference(rememberMe)
 
                         withContext(Dispatchers.Main) {
                             Toast.makeText(this@RegistrationActivity, "Регистрация успешна!",
                                 Toast.LENGTH_SHORT).show()
                             val intent = Intent(this@RegistrationActivity, StartActivity::class.java)
                             startActivity(intent)
+                            finish()
                         }
                     } else if (response.code == 409) {
                         withContext(Dispatchers.Main) {
@@ -102,7 +107,6 @@ class RegistrationActivity : Activity() {
                         withContext(Dispatchers.Main) {
                             Toast.makeText(this@RegistrationActivity, "Ошибка регистрации: ${response.code}",
                                 Toast.LENGTH_SHORT).show()
-
                         }
                     }
                 }
@@ -123,15 +127,10 @@ class RegistrationActivity : Activity() {
         }
     }
 
-    private fun getAccessToken(): String? {
-        val sharedPref = getSharedPreferences("apps_prefs", MODE_PRIVATE)
-        return sharedPref.getString("access_token", null)
-    }
-
-    private fun clearAccessToken() {
+    private fun saveRememberMePreference(rememberMe: Boolean) {
         val sharedPref = getSharedPreferences("apps_prefs", MODE_PRIVATE)
         with(sharedPref.edit()) {
-            remove("access_token")
+            putBoolean("remember_me", rememberMe)
             apply()
         }
     }

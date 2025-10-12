@@ -16,7 +16,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import okhttp3.ResponseBody.Companion.toResponseBody
 
 class RegistrationActivity : Activity() {
     private val client = OkHttpClient()
@@ -48,7 +47,7 @@ class RegistrationActivity : Activity() {
                 return@setOnClickListener
             }
 
-            if (!Validators.validateRussinPhone(phoneNumber)) {
+            if (!Validators.validateRussianPhone(phoneNumber)) {
                 Toast.makeText(this, "Номер телефона должен содержать 10 цифр (не включая +7)",
                     Toast.LENGTH_LONG).show()
                 return@setOnClickListener

@@ -1,133 +1,87 @@
 package com.example.safyscooter
 
-import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
-import android.os.SystemClock
-import android.widget.Chronometer
-import androidx.activity.ComponentActivity
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresPermission
-import androidx.camera.core.CameraSelector
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
-import androidx.camera.core.Preview
-import androidx.camera.video.*
-import androidx.camera.video.FileOutputOptions
+import android.provider.MediaStore
+import android.widget.ImageButton
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
-import com.example.safyscooter.databinding.ActivityStartBinding
-import java.io.File
 
-class StartActivity : ComponentActivity() {
+class StartActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityStartBinding
-    private var recording: Recording? = null
-    private var videoCapture: VideoCapture<Recorder>? = null
-    private var isRecording = false
-
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isGranted) startCamera()
-        }
+    private val REQUEST_VIDEO_CAPTURE = 1
+    private val CAMERA_PERMISSION_CODE = 100
+    private var videoUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityStartBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.activity_start)
 
-        // Таймер справа
-        binding.timer.base = SystemClock.elapsedRealtime()
-        binding.timer.stop()
-        binding.timer.isVisible = false
+        val recordButton: ImageButton = findViewById(R.id.record_button)
 
-        // Запрос разрешений
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
-            PackageManager.PERMISSION_GRANTED) {
-            startCamera()
+        recordButton.setOnClickListener {
+            // При КАЖДОМ нажатии проверяем разрешение
+            checkCameraPermission()
+        }
+    }
+
+    private fun checkCameraPermission() {
+        // Проверяем, есть ли уже разрешение
+        if (ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            // Разрешение есть - запускаем камеру
+            launchCamera()
         } else {
-            requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-
-        binding.btnRec.setOnClickListener {
-            if (!isRecording) {
-                startRecording()
-            } else {
-                stopRecording()
-            }
-        }
-
-        binding.btnProfile.setOnClickListener {
-            // Личный кабинет
+            // Разрешения нет - запрашиваем его ПРИ КАЖДОМ нажатии
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.CAMERA),
+                CAMERA_PERMISSION_CODE
+            )
         }
     }
 
-    private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+    // Этот метод вызывается после того как пользователь ответил на запрос разрешения
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
-
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(binding.previewView.surfaceProvider)
-            }
-
-            val recorder = Recorder.Builder()
-                .setQualitySelector(QualitySelector.from(Quality.HD))
-                .build()
-            videoCapture = VideoCapture.withOutput(recorder)
-
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-            try {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, videoCapture
-                )
-            } catch (exc: Exception) {
-                exc.printStackTrace()
-            }
-        }, ContextCompat.getMainExecutor(this))
-    }
-
-
-    private fun startRecording() {
-        val videoCapture = this.videoCapture ?: return
-
-        val videoFile = File(externalCacheDir, "video_${System.currentTimeMillis()}.mp4")
-
-        val outputOptions = FileOutputOptions.Builder(videoFile).build()
-
-        recording = videoCapture.output
-            .prepareRecording(this, outputOptions)
-            .start(ContextCompat.getMainExecutor(this)) { event ->
-                when (event) {
-                    is VideoRecordEvent.Start -> {
-                        isRecording = true
-                        binding.timer.base = SystemClock.elapsedRealtime()
-                        binding.timer.isVisible = true
-                        binding.timer.start()
-                        binding.btnRec.text = "STOP"
-                    }
-                    is VideoRecordEvent.Finalize -> {
-                        if (!event.hasError()) {
-                            val intent = Intent(this, SendVideoActivity::class.java).apply {
-                                putExtra("VIDEO_PATH", videoFile.absolutePath)
-                            }
-                            startActivity(intent)
-                        }
-                    }
+        when (requestCode) {
+            CAMERA_PERMISSION_CODE -> {
+                // Проверяем, дал ли пользователь разрешение
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Разрешение дано - запускаем камеру
+                    launchCamera()
                 }
+                // Если разрешение не дано - ничего не делаем, но при следующем нажатии снова запросим
             }
+        }
     }
 
-    private fun stopRecording() {
-        recording?.stop()
-        recording = null
-        isRecording = false
-        binding.timer.stop()
-        binding.timer.isVisible = false
-        binding.btnRec.text = "REC"
+    private fun launchCamera() {
+        val takeVideoIntent = Intent(MediaStore.ACTION_VIDEO_CAPTURE)
+        if (takeVideoIntent.resolveActivity(packageManager) != null) {
+            startActivityForResult(takeVideoIntent, REQUEST_VIDEO_CAPTURE)
+        }
+    }
+
+    @Deprecated("Use registerForActivityResult in new projects")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_VIDEO_CAPTURE && resultCode == Activity.RESULT_OK) {
+            videoUri = data?.data
+            // здесь в videoUri путь к записанному видео
+        }
     }
 }

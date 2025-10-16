@@ -5,12 +5,19 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.video.*
+import androidx.camera.video.FileOutputOptions
+import androidx.camera.video.Quality
+import androidx.camera.video.QualitySelector
+import androidx.camera.video.Recorder
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoCapture
+import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.example.safyscooter.databinding.ActivityStartBinding
@@ -38,6 +45,7 @@ class StartActivity : ComponentActivity() {
         binding = ActivityStartBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Разрешение камеры
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             == PackageManager.PERMISSION_GRANTED
         ) {
@@ -46,19 +54,19 @@ class StartActivity : ComponentActivity() {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
 
+        // Кнопка REC / STOP
         binding.btnRec.setOnClickListener {
             if (!isRecording) {
                 startRecording()
             } else {
-                // пользователь остановил запись
                 stopReason = StopReason.USER
                 stopRecording()
             }
         }
 
+        // Кнопка профиля
         binding.btnProfile.setOnClickListener {
             if (isRecording) {
-                // сперва корректно завершим запись, затем откроем личный кабинет
                 stopReason = StopReason.USER
                 stopRecording()
             } else {
@@ -108,6 +116,7 @@ class StartActivity : ComponentActivity() {
                     }
                     is VideoRecordEvent.Finalize -> {
                         val file = lastVideoFile
+                        // Сброс UI
                         isRecording = false
                         binding.btnRec.text = "REC"
                         binding.timer.isVisible = false
@@ -116,19 +125,26 @@ class StartActivity : ComponentActivity() {
                         if (!event.hasError()) {
                             when (stopReason) {
                                 StopReason.USER -> {
-                                    // вручную остановили → открываем личный кабинет
-                                    openPersonal()
+                                    // Пользовательская остановка → открываем ЛК с меткой времени
+                                    val ts = System.currentTimeMillis()
+                                    startActivity(
+                                        Intent(this, PersonalActivity::class.java)
+                                            .putExtra("NEW_VIOLATION_TS", ts)
+                                    )
                                 }
                                 StopReason.TIMER, StopReason.NONE -> {
-                                    // автостоп по таймеру → как раньше, на отправку видео
-                                    if (file != null) {
-                                        startActivity(
-                                            Intent(this, SendVideoActivity::class.java)
-                                                .putExtra("VIDEO_PATH", file.absolutePath)
-                                        )
-                                    }
+                                    // Автостоп → остаёмся на StartActivity, ничего не добавляем
+                                    Toast.makeText(
+                                        this,
+                                        "Запись завершена по таймеру",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    // при необходимости: file можно удалить или оставить в cache
+                                    // file?.delete()
                                 }
                             }
+                        } else {
+                            Toast.makeText(this, "Ошибка записи: ${event.error}", Toast.LENGTH_SHORT).show()
                         }
                         stopReason = StopReason.NONE
                     }
@@ -140,7 +156,7 @@ class StartActivity : ComponentActivity() {
         recording?.stop()
         recording = null
         countDownTimer?.cancel()
-        // Остальное (UI/навигация) произойдёт в Finalize по stopReason
+        // Остальное (UI/навигация) делаем в Finalize по stopReason
     }
 
     /** Обратный отсчёт 20→0, затем автостоп */

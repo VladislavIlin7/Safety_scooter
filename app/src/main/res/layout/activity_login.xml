@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:padding="32dp"
     android:gravity="center"
-    android:background="#B2EBF2"
+    android:background="#E0F7FA"
     android:id="@+id/registration"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".AuthActivity"

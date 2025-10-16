@@ -7,7 +7,8 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -31,11 +32,10 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".AuthActivity"
-            android:exported="false" />
-
-        <activity android:name=".StartActivity"
-            android:exported="false" />
+        <activity android:name=".AuthActivity" />
+        <activity android:name=".StartActivity" />
+        <activity android:name=".PersonalActivity" />
+        <activity android:name=".SendVideoActivity" />
     </application>
 
 </manifest>

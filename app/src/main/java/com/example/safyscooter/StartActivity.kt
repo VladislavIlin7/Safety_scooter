@@ -116,7 +116,6 @@ class StartActivity : ComponentActivity() {
                     }
                     is VideoRecordEvent.Finalize -> {
                         val file = lastVideoFile
-                        // Сброс UI
                         isRecording = false
                         binding.btnRec.text = "REC"
                         binding.timer.isVisible = false
@@ -125,26 +124,24 @@ class StartActivity : ComponentActivity() {
                         if (!event.hasError()) {
                             when (stopReason) {
                                 StopReason.USER -> {
-                                    // Пользовательская остановка → открываем ЛК с меткой времени
+                                    // -> экран предпросмотра (без добавления в список)
                                     val ts = System.currentTimeMillis()
-                                    startActivity(
-                                        Intent(this, PersonalActivity::class.java)
-                                            .putExtra("NEW_VIOLATION_TS", ts)
-                                    )
+                                    if (file != null) {
+                                        startActivity(
+                                            Intent(this, ReviewViolationActivity::class.java)
+                                                .putExtra("VIDEO_PATH", file.absolutePath)
+                                                .putExtra("TS", ts)
+                                        )
+                                    } else {
+                                        // на всякий случай, если файл не создался
+                                        startActivity(Intent(this, PersonalActivity::class.java))
+                                    }
                                 }
                                 StopReason.TIMER, StopReason.NONE -> {
-                                    // Автостоп → остаёмся на StartActivity, ничего не добавляем
-                                    Toast.makeText(
-                                        this,
-                                        "Запись завершена по таймеру",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    // при необходимости: file можно удалить или оставить в cache
-                                    // file?.delete()
+                                    // автостоп — остаемся на камере (по вашему текущему ТЗ)
+                                    // можно показать Toast, если нужно
                                 }
                             }
-                        } else {
-                            Toast.makeText(this, "Ошибка записи: ${event.error}", Toast.LENGTH_SHORT).show()
                         }
                         stopReason = StopReason.NONE
                     }

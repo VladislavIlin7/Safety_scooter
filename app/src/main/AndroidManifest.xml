@@ -35,6 +35,8 @@
         <activity android:name=".AuthActivity" />
         <activity android:name=".StartActivity" />
         <activity android:name=".PersonalActivity" />
+        <activity android:name=".ReviewViolationActivity" />
+
     </application>
 
 </manifest>

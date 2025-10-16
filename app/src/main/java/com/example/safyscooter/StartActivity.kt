@@ -4,17 +4,14 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.SystemClock
-import android.widget.Chronometer
+import android.os.CountDownTimer
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresPermission
 import androidx.camera.core.CameraSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.camera.core.Preview
 import androidx.camera.video.*
-import androidx.camera.video.FileOutputOptions
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.example.safyscooter.databinding.ActivityStartBinding
@@ -26,6 +23,7 @@ class StartActivity : ComponentActivity() {
     private var recording: Recording? = null
     private var videoCapture: VideoCapture<Recorder>? = null
     private var isRecording = false
+    private var countDownTimer: CountDownTimer? = null
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -37,29 +35,21 @@ class StartActivity : ComponentActivity() {
         binding = ActivityStartBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Таймер справа
-        binding.timer.base = SystemClock.elapsedRealtime()
-        binding.timer.stop()
-        binding.timer.isVisible = false
-
-        // Запрос разрешений
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
-            PackageManager.PERMISSION_GRANTED) {
+        // Проверяем разрешения
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
             startCamera()
         } else {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
 
         binding.btnRec.setOnClickListener {
-            if (!isRecording) {
-                startRecording()
-            } else {
-                stopRecording()
-            }
+            if (!isRecording) startRecording() else stopRecording()
         }
 
         binding.btnProfile.setOnClickListener {
-            // Личный кабинет
+            // TODO: открыть личный кабинет
         }
     }
 
@@ -91,12 +81,9 @@ class StartActivity : ComponentActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-
     private fun startRecording() {
         val videoCapture = this.videoCapture ?: return
-
         val videoFile = File(externalCacheDir, "video_${System.currentTimeMillis()}.mp4")
-
         val outputOptions = FileOutputOptions.Builder(videoFile).build()
 
         recording = videoCapture.output
@@ -105,10 +92,9 @@ class StartActivity : ComponentActivity() {
                 when (event) {
                     is VideoRecordEvent.Start -> {
                         isRecording = true
-                        binding.timer.base = SystemClock.elapsedRealtime()
-                        binding.timer.isVisible = true
-                        binding.timer.start()
                         binding.btnRec.text = "STOP"
+                        binding.timer.isVisible = true
+                        startCountdownTimer(videoFile)
                     }
                     is VideoRecordEvent.Finalize -> {
                         if (!event.hasError()) {
@@ -126,8 +112,24 @@ class StartActivity : ComponentActivity() {
         recording?.stop()
         recording = null
         isRecording = false
-        binding.timer.stop()
+        countDownTimer?.cancel()
         binding.timer.isVisible = false
         binding.btnRec.text = "REC"
+    }
+
+    /** Обратный отсчёт с 20 сек до 0, после чего стоп **/
+    private fun startCountdownTimer(videoFile: File) {
+        countDownTimer?.cancel()
+
+        countDownTimer = object : CountDownTimer(20_000, 1_000) {
+            override fun onTick(millisUntilFinished: Long) {
+                val secondsLeft = (millisUntilFinished / 1000).toInt()
+                binding.timer.text = secondsLeft.toString()
+            }
+
+            override fun onFinish() {
+                stopRecording()
+            }
+        }.start()
     }
 }

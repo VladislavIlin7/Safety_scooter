@@ -36,6 +36,7 @@
         <activity android:name=".StartActivity" />
         <activity android:name=".PersonalActivity" />
         <activity android:name=".ReviewViolationActivity" />
+        <activity android:name=".ViolationDetailsActivity" />
 
     </application>
 

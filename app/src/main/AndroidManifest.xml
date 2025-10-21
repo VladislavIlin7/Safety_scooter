@@ -7,7 +7,10 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"
+        tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -31,12 +34,17 @@
 
         <activity android:name=".RegistrationActivity"
             android:exported="false" />
-
         <activity android:name=".AuthActivity"
             android:exported="false" />
-
         <activity android:name=".StartActivity"
             android:exported="false" />
+        <activity android:name=".PersonalActivity"
+            android:exported="false" />
+        <activity android:name=".ReviewViolationActivity"
+            android:exported="false" />
+        <activity android:name=".ViolationDetailsActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

@@ -2,6 +2,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,7 +23,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SafetyScooter">
         <activity
-            android:name=".RegistrationActivity"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -21,11 +32,19 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".RegistrationActivity"
+            android:exported="false" />
         <activity android:name=".AuthActivity"
             android:exported="false" />
-
         <activity android:name=".StartActivity"
             android:exported="false" />
+        <activity android:name=".PersonalActivity"
+            android:exported="false" />
+        <activity android:name=".ReviewViolationActivity"
+            android:exported="false" />
+        <activity android:name=".ViolationDetailsActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

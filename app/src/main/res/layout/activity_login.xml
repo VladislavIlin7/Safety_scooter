@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:padding="32dp"
     android:gravity="center"
-    android:background="#B2EBF2"
+    android:background="#E0F7FA"
     android:id="@+id/registration"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".AuthActivity"
@@ -21,23 +21,25 @@
         android:textColor="#000000"
         android:layout_marginBottom="40dp" />
 
-    <!-- Поле для логина -->
+    <!-- Поле для телефона -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Введите логин"
+        android:text="Введите номер телефона"
         android:textSize="16sp"
         android:textColor="#000000"
         android:layout_marginBottom="8dp" />
 
     <EditText
-        android:id="@+id/user_login_auth"
+        android:id="@+id/user_phone_auth"
         android:layout_width="match_parent"
         android:layout_height="48dp"
+        android:textColor="@color/black"
         android:background="@drawable/edittext_background"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:textSize="16sp"
+        android:inputType="phone"
         android:layout_marginBottom="16dp" />
 
 
@@ -54,6 +56,7 @@
         android:id="@+id/user_pass_auth"
         android:layout_width="match_parent"
         android:layout_height="48dp"
+        android:textColor="@color/black"
         android:background="@drawable/edittext_background"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
@@ -61,7 +64,6 @@
         android:textSize="16sp"
         android:layout_marginBottom="32dp" />
 
-    <!-- Кнопка регистрации -->
     <Button
         android:id="@+id/btn_auth"
         android:layout_width="match_parent"

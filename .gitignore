@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+app/src/main/java/com/example/safyscooter/exp.kt
+app/src/main/java/experiments
+.idea/
+.kotlin/

@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.CountDownTimer
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -23,6 +22,7 @@ import androidx.core.view.isVisible
 import com.example.safyscooter.databinding.ActivityStartBinding
 import java.io.File
 
+
 class StartActivity : ComponentActivity() {
 
     private lateinit var binding: ActivityStartBinding
@@ -31,6 +31,7 @@ class StartActivity : ComponentActivity() {
     private var countDownTimer: CountDownTimer? = null
     private var isRecording = false
     private var lastVideoFile: File? = null
+    private var recordingStartTime: Long = 0
 
     private enum class StopReason { NONE, USER, TIMER }
     private var stopReason: StopReason = StopReason.NONE
@@ -101,7 +102,6 @@ class StartActivity : ComponentActivity() {
         val videoFile = File(externalCacheDir, "video_${System.currentTimeMillis()}.mp4")
         lastVideoFile = videoFile
         stopReason = StopReason.NONE
-
         val outputOptions = FileOutputOptions.Builder(videoFile).build()
 
         recording = vc.output
@@ -112,6 +112,7 @@ class StartActivity : ComponentActivity() {
                         isRecording = true
                         binding.btnRec.text = "STOP"
                         binding.timer.isVisible = true
+                        recordingStartTime = System.currentTimeMillis() / 1000
                         startCountdownTimer()
                     }
                     is VideoRecordEvent.Finalize -> {
@@ -125,12 +126,11 @@ class StartActivity : ComponentActivity() {
                             when (stopReason) {
                                 StopReason.USER -> {
                                     // -> экран предпросмотра (без добавления в список)
-                                    val ts = System.currentTimeMillis()
                                     if (file != null) {
                                         startActivity(
                                             Intent(this, ReviewViolationActivity::class.java)
                                                 .putExtra("VIDEO_PATH", file.absolutePath)
-                                                .putExtra("TS", ts)
+                                                .putExtra("START_TIMESTAMP", recordingStartTime)
                                         )
                                     } else {
                                         // на всякий случай, если файл не создался

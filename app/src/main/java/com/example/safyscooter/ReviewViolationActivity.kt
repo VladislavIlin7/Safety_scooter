@@ -1,5 +1,6 @@
 package com.example.safyscooter
 
+import android.R
 import android.content.Intent
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
@@ -12,13 +13,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
-import com.google.gson.Gson
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.MediaType.Companion.toMediaType
+import org.json.JSONArray
 
 class ReviewViolationActivity : ComponentActivity() {
 
@@ -93,20 +94,25 @@ class ReviewViolationActivity : ComponentActivity() {
             throw Exception("Ошибка: пользователь не авторизован")
         }
 
-        val videoBytes = videoFile.readBytes()
-        val base64Video = android.util.Base64.encodeToString(videoBytes, android.util.Base64.DEFAULT)
+        val gpsJsonArray = JSONArray().apply {
+            locations.forEach { location ->
+                put("${location.first},${location.second}")
+            }
+        }
 
-        val uploadData = mapOf(
-            "gps" to locations.map { "${it.first},${it.second}" },
-            "time" to startTimestamp,
-            "file" to base64Video
-        )
-
-        val jsonBody = Gson().toJson(uploadData)
-        val requestBody = jsonBody.toRequestBody("application/json; charset=utf-8".toMediaType())
+        val requestBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("gps", gpsJsonArray.toString())
+            .addFormDataPart("time", startTimestamp.toString())
+            .addFormDataPart(
+                "file",
+                "video_${startTimestamp}.mp4",
+                videoFile.asRequestBody("application/octet-stream".toMediaTypeOrNull())
+            )
+            .build()
 
         val request = Request.Builder()
-            .url("https://safetyscooter.ru//video//upload")
+            .url("https://safetyscooter.ru/video/upload")
             .post(requestBody)
             .header("Authorization", accessToken)
             .build()
@@ -114,14 +120,10 @@ class ReviewViolationActivity : ComponentActivity() {
         client.newCall(request).execute().use { response ->
             val responseBody = response.body?.string()
             when (response.code) {
-                200 -> {
-                    Toast.makeText(this@ReviewViolationActivity, "Успешно",
-                        Toast.LENGTH_LONG).show()
-                }
+                200 -> { }
                 401 -> throw Exception("Ошибка авторизации: 401")
                 422 -> throw Exception("Ошибка валидации: 422")
-//                500 -> throw Exception("Внутренняя ошибка сервера: 500")
-                500 -> throw Exception("500: ${responseBody}")
+                500 -> throw Exception("Внутренняя ошибка сервера: 500")
                 else -> throw Exception("Ошибка сервера: ${response.code}")
             }
         }

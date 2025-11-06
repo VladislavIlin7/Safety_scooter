@@ -42,7 +42,6 @@ class StartActivity : ComponentActivity() {
     private var lastVideoFile: File? = null
     private var recordingStartTime: Long = 0
 
-    // === ДОБАВЛЕНО ДЛЯ ГЕОЛОКАЦИИ ===
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val locationList = mutableListOf<Pair<Double, Double>>()
     private var isTrackingLocation = false
@@ -64,7 +63,6 @@ class StartActivity : ComponentActivity() {
     private val locationExecutor = Executors.newSingleThreadScheduledExecutor()
     private var guaranteedLocationTimer: CountDownTimer? = null
 
-    // === КОНЕЦ ДОБАВЛЕНИЯ ===
 
     private enum class StopReason { NONE, USER, TIMER }
     private var stopReason: StopReason = StopReason.NONE
@@ -159,7 +157,6 @@ class StartActivity : ComponentActivity() {
         }
     }
 
-    // === ОБНОВЛЕННЫЙ МЕТОД ДЛЯ ГЕОЛОКАЦИИ ===
     private fun updateCurrentLocation(location: Location) {
         currentLocation = location
 
@@ -171,7 +168,6 @@ class StartActivity : ComponentActivity() {
     private fun startLocationTracking() {
         if (!isTrackingLocation && hasLocationPermission() && isLocationEnabled()) {
             try {
-                // === ИСПРАВЛЕНИЕ: Добавляем проверку разрешения ===
                 if (hasLocationPermission()) {
                     fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                         location?.let {
@@ -194,7 +190,6 @@ class StartActivity : ComponentActivity() {
         }
     }
 
-    // === НОВЫЙ МЕТОД: Гарантированный сбор координат ===
     private fun startGuaranteedLocationCollection() {
         guaranteedLocationTimer?.cancel()
 
@@ -214,7 +209,6 @@ class StartActivity : ComponentActivity() {
         }.start()
     }
 
-    // === НОВЫЙ МЕТОД: Гарантирует координату для конкретной секунды ===
     private fun ensureLocationForSecond(second: Int) {
         val expectedSize = second + 1
 
@@ -222,7 +216,6 @@ class StartActivity : ComponentActivity() {
             currentLocation?.let { location ->
                 locationList.add(Pair(location.latitude, location.longitude))
             } ?: run {
-                // === ИСПРАВЛЕНИЕ: Добавляем проверку разрешения ===
                 if (hasLocationPermission()) {
                     try {
                         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -231,7 +224,6 @@ class StartActivity : ComponentActivity() {
                             }
                         }
                     } catch (securityException: SecurityException) {
-                        // Игнорируем или логируем ошибку
                     }
                 }
             }
@@ -282,7 +274,6 @@ class StartActivity : ComponentActivity() {
         startLocationTracking()
         startGuaranteedLocationCollection()
 
-        // === ИСПРАВЛЕНИЕ: Добавляем проверку разрешения ===
         if (hasLocationPermission()) {
             try {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -291,7 +282,6 @@ class StartActivity : ComponentActivity() {
                     }
                 }
             } catch (securityException: SecurityException) {
-                // Игнорируем или логируем ошибку
             }
         }
 
@@ -318,7 +308,7 @@ class StartActivity : ComponentActivity() {
 
                         if (!event.hasError()) {
                             when (stopReason) {
-                                StopReason.USER -> {
+                                StopReason.USER, StopReason.TIMER -> {
                                     if (file != null) {
                                         val recordedSeconds = (System.currentTimeMillis() / 1000 - recordingStartTime).toInt()
                                         ensureMinimumLocations(recordedSeconds)
@@ -336,7 +326,6 @@ class StartActivity : ComponentActivity() {
                                     }
                                 }
                                 StopReason.TIMER, StopReason.NONE -> {
-                                    // автостоп
                                 }
                             }
                         }
@@ -346,7 +335,6 @@ class StartActivity : ComponentActivity() {
             }
     }
 
-    // === НОВЫЙ МЕТОД: Гарантирует минимальное количество координат ===
     private fun ensureMinimumLocations(expectedSeconds: Int) {
         while (locationList.size < expectedSeconds && currentLocation != null) {
             locationList.add(Pair(currentLocation!!.latitude, currentLocation!!.longitude))

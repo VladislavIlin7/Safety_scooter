@@ -31,7 +31,17 @@ class PersonalActivity : ComponentActivity() {
         binding.swipeRefresh.setOnRefreshListener {
             loadApplications()
         }
+        binding.btnLogout.setOnClickListener {
+            val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+            prefs.edit().clear().apply()
+
+            val intent = Intent(this, AuthActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+        }
+
     }
+
 
     private fun setupRecyclerView() {
         adapter = ApplicationAdapter { application ->

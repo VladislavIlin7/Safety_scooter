@@ -1,88 +1,142 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/registration"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="32dp"
-    android:gravity="center"
-    android:background="#E0F7FA"
-    android:id="@+id/registration"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".AuthActivity"
-    >
+    android:background="#0B1020">
 
-    <!-- Заголовок -->
+    <!-- Логотип / название -->
     <TextView
+        android:id="@+id/tvAppTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Войти в аккаунт"
+        android:text="SafyScooter"
         android:textSize="28sp"
         android:textStyle="bold"
-        android:textColor="#000000"
-        android:layout_marginBottom="40dp" />
+        android:textColor="#FFC700"
+        android:letterSpacing="0.05"
+        android:layout_marginTop="40dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Поле для телефона -->
     <TextView
-        android:layout_width="match_parent"
+        android:id="@+id/tvAppSubtitle"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Введите номер телефона"
-        android:textSize="16sp"
-        android:textColor="#000000"
-        android:layout_marginBottom="8dp" />
+        android:text="Фиксация нарушений самокатчиков"
+        android:textSize="14sp"
+        android:textColor="#9CA3AF"
+        android:layout_marginTop="4dp"
+        app:layout_constraintTop_toBottomOf="@id/tvAppTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <EditText
-        android:id="@+id/user_phone_auth"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:textColor="@color/black"
-        android:background="@drawable/edittext_background"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:textSize="16sp"
-        android:inputType="phone"
-        android:layout_marginBottom="16dp" />
-
-
-    <!-- Поле для пароля -->
-    <TextView
-        android:layout_width="match_parent"
+    <!-- Карточка логина -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardLogin"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Введите пароль"
-        android:textSize="16sp"
-        android:textColor="#000000"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="32dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="#141A2A"
+        app:layout_constraintTop_toBottomOf="@id/tvAppSubtitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <EditText
-        android:id="@+id/user_pass_auth"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:textColor="@color/black"
-        android:background="@drawable/edittext_background"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:inputType="textPassword"
-        android:textSize="16sp"
-        android:layout_marginBottom="32dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
 
-    <Button
-        android:id="@+id/btn_auth"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:text="Войти"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:background="#000000"
-        android:textColor="#FFFFFF"
-        android:gravity="center" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Вход"
 
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#FFC700"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Телефон -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Телефон"
+                android:textSize="13sp"
+                android:textColor="#9CA3AF"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/user_phone_auth"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="#0B1020"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#4B5563"
+                android:hint="+7 900 000-00-00"
+                android:inputType="phone"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Пароль -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Пароль"
+                android:textSize="13sp"
+                android:textColor="#9CA3AF"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/user_pass_auth"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="#0B1020"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#4B5563"
+                android:hint="••••••••"
+                android:inputType="textPassword"
+                android:layout_marginBottom="24dp" />
+
+            <Button
+                android:id="@+id/btn_auth"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="Войти"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#000000"
+                android:backgroundTint="#FFC700"
+                android:stateListAnimator="@null" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Ссылка на регистрацию -->
     <TextView
         android:id="@+id/link_reg"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="120dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="72dp"
         android:text="Создать аккаунт"
-        android:textColor="#1B1B1B"
-        android:textSize="16sp" />
+        android:textColor="#FFC700"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent" />
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

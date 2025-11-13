@@ -10,39 +10,81 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#E0F7FA">
+        android:background="#0B1020">
+
+        <!-- Кнопка выхода (отодвинута от верха) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#141A2A"
+            android:paddingStart="14dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="6dp"
+            android:text="Выйти"
+            android:textAllCaps="false"
+            android:textColor="#FFC700"
+            android:textSize="14sp"
+            app:cornerRadius="20dp"
+            app:strokeColor="#FFC700"
+            app:strokeWidth="1dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Список между кнопками -->
+
+        <!-- Кнопка "Записать нарушение" (отодвинута от низа) -->
+
+        <!-- Пустое состояние по центру -->
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginHorizontal="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
             app:layout_constraintBottom_toTopOf="@id/btnRecord"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_margin="8dp" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnLogout"
+            app:layout_constraintVertical_bias="0.0"
+            tools:listitem="@layout/item_violation" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRecord"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="40dp"
+            android:backgroundTint="#FFC700"
             android:text="Записать нарушение"
-            android:layout_margin="16dp"
+            android:textAllCaps="false"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:cornerRadius="26dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
             android:id="@+id/emptyState"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Нет отправленных заявок"
-            android:textSize="18sp"
+            android:textSize="16sp"
+            android:textColor="#9CA3AF"
             android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

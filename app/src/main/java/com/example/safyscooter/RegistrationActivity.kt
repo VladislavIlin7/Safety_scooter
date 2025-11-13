@@ -59,7 +59,7 @@ class RegistrationActivity : Activity() {
                 return@setOnClickListener
             }
 
-            val formattedPhone = "+7$phoneNumber"
+            val formattedPhone = "$phoneNumber"
             val user = User(formattedPhone, password)
 
             CoroutineScope(Dispatchers.IO).launch {
@@ -75,7 +75,7 @@ class RegistrationActivity : Activity() {
                 val requestBody = jsonBody.toRequestBody("application/json; charset=utf-8".toMediaType())
 
                 val request = Request.Builder()
-                    .url("http://89.169.177.162/registration")
+                    .url("https://safetyscooter.ru//registration")
                     .post(requestBody)
                     .build()
 
@@ -83,21 +83,26 @@ class RegistrationActivity : Activity() {
                     if (response.code == 200) {
                         val responseBody = response.body?.string()
                         val authResponse = gson.fromJson(responseBody, AuthResponse::class.java)
-                        val accessToken = authResponse.auth_access
+                        val accessToken = authResponse.access_token
 
                         saveAccessToken(accessToken)
 
                         withContext(Dispatchers.Main) {
                             Toast.makeText(this@RegistrationActivity, "Регистрация успешна!",
-                                Toast.LENGTH_SHORT).show()
+                                Toast.LENGTH_LONG).show()
                             val intent = Intent(this@RegistrationActivity, StartActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             startActivity(intent)
+                        }
+                    } else if (response.code == 409) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@RegistrationActivity, "Такой пользователь уже есть",
+                                Toast.LENGTH_LONG).show()
                         }
                     } else {
                         withContext(Dispatchers.Main) {
                             Toast.makeText(this@RegistrationActivity, "Ошибка регистрации: ${response.code}",
                                 Toast.LENGTH_LONG).show()
-
                         }
                     }
                 }
@@ -111,22 +116,9 @@ class RegistrationActivity : Activity() {
     }
 
     private fun saveAccessToken(token: String) {
-        val sharedPref = getSharedPreferences("apps_prefs", MODE_PRIVATE)
+        val sharedPref = getSharedPreferences("app_prefs", MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("access_token", token)
-            apply()
-        }
-    }
-
-    private fun getAccessToken(): String? {
-        val sharedPref = getSharedPreferences("apps_prefs", MODE_PRIVATE)
-        return sharedPref.getString("access_token", null)
-    }
-
-    private fun clearAccessToken() {
-        val sharedPref = getSharedPreferences("apps_prefs", MODE_PRIVATE)
-        with(sharedPref.edit()) {
-            remove("access_token")
             apply()
         }
     }

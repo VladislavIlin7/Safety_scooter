@@ -20,17 +20,16 @@ class ViolationDetailsActivity : ComponentActivity() {
         binding = ActivityViolationDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val violationId = intent.getLongExtra("VIOLATION_ID", -1L)
-        require(violationId > 0) { "VIOLATION_ID is required" }
+        val applicationId = intent.getLongExtra("APPLICATION_ID", -1L)
+        require(applicationId > 0) { "APPLICATION_ID is required" }
 
         vm = ViewModelProvider(this, object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return ViolationDetailsViewModel(violationId) as T
+                return ViolationDetailsViewModel(applicationId) as T
             }
         })[ViolationDetailsViewModel::class.java]
 
-        // Подпишемся на UI-стейт (title, dateTime, status)
         lifecycleScope.launch {
             vm.ui.collectLatest { ui ->
                 binding.tvTitle.text = ui.title
@@ -39,7 +38,6 @@ class ViolationDetailsActivity : ComponentActivity() {
             }
         }
 
-        // При входе один раз попробуем "обновить с сервера"
         vm.refresh()
 
         binding.btnBackToList.setOnClickListener {
@@ -48,7 +46,6 @@ class ViolationDetailsActivity : ComponentActivity() {
         }
 
         binding.btnRetry.setOnClickListener {
-            // пока только пробросим refresh — логику отправки видео добавим позже
             vm.refresh()
         }
     }

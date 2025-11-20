@@ -24,24 +24,42 @@ class PersonalActivity : ComponentActivity() {
         setupRecyclerView()
         loadApplications()
 
-        binding.btnRecord.setOnClickListener {
+        binding.toolbar.setNavigationOnClickListener {
+            finish()
+        }
+
+        binding.btnAdd.setOnClickListener {
             startActivity(Intent(this, StartActivity::class.java))
         }
 
         binding.swipeRefresh.setOnRefreshListener {
             loadApplications()
         }
-        binding.btnLogout.setOnClickListener {
-            val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-            prefs.edit().clear().apply()
 
-            val intent = Intent(this, AuthActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+        binding.bottomNavigation.selectedItemId = R.id.nav_violations
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    val intent = Intent(this, StartActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
+                        this, 0, 0
+                    ).toBundle())
+                    true
+                }
+                R.id.nav_violations -> true
+                R.id.nav_profile -> {
+                    val intent = Intent(this, ProfileActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
+                        this, 0, 0
+                    ).toBundle())
+                    true
+                }
+                else -> false
+            }
         }
-
     }
-
 
     private fun setupRecyclerView() {
         adapter = ApplicationAdapter { application ->
@@ -51,8 +69,8 @@ class PersonalActivity : ComponentActivity() {
             startActivity(intent)
         }
 
-        binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        binding.recyclerView.adapter = adapter
+        binding.rvViolations.layoutManager = LinearLayoutManager(this)
+        binding.rvViolations.adapter = adapter
     }
 
     private fun loadApplications() {
@@ -75,10 +93,10 @@ class PersonalActivity : ComponentActivity() {
 
                     if (applications.isEmpty()) {
                         binding.emptyState.visibility = View.VISIBLE
-                        binding.recyclerView.visibility = View.GONE
+                        binding.rvViolations.visibility = View.GONE
                     } else {
                         binding.emptyState.visibility = View.GONE
-                        binding.recyclerView.visibility = View.VISIBLE
+                        binding.rvViolations.visibility = View.VISIBLE
                     }
                 }
             } catch (e: Exception) {

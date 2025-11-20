@@ -1,6 +1,8 @@
 package com.example.safyscooter
 
 import android.Manifest
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -8,6 +10,8 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Looper
 import android.provider.Settings
+import android.view.View
+import android.view.animation.AnimationUtils
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -22,6 +26,7 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import com.example.safyscooter.databinding.ActivityStartBinding
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -29,6 +34,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -41,6 +47,7 @@ class StartActivity : ComponentActivity() {
     private var isRecording = false
     private var lastVideoFile: File? = null
     private var recordingStartTime: Long = 0
+    private var pulseAnimator: ObjectAnimator? = null
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val locationList = mutableListOf<Pair<Double, Double>>()
@@ -92,6 +99,76 @@ class StartActivity : ComponentActivity() {
         binding = ActivityStartBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Подписываемся на обновления загрузки
+        lifecycleScope.launch {
+            UploadManager.uploadState.collect { state ->
+                when (state) {
+                    is UploadManager.UploadState.Idle -> {
+                        binding.uploadStatusCard.visibility = View.GONE
+                    }
+                    is UploadManager.UploadState.Uploading -> {
+                        binding.uploadStatusCard.visibility = View.VISIBLE
+                        binding.uploadSpinner.visibility = View.VISIBLE
+                        binding.uploadIcon.visibility = View.GONE
+                        binding.tvUploadStatus.text = "Загрузка видео..."
+                        binding.tvUploadPercent.text = "${state.progress}%"
+                        binding.tvUploadPercent.setTextColor(ContextCompat.getColor(this@StartActivity, R.color.primary))
+                        binding.uploadProgressBar.progress = state.progress
+                        binding.uploadProgressBar.progressTintList = android.content.res.ColorStateList.valueOf(
+                            ContextCompat.getColor(this@StartActivity, R.color.primary)
+                        )
+
+                        binding.tvUploadDetails.text = String.format(
+                            "%d%% • %.1f MB из %.1f MB",
+                            state.progress, state.mbUploaded, state.mbTotal
+                        )
+                    }
+                    is UploadManager.UploadState.Success -> {
+                        binding.uploadStatusCard.visibility = View.VISIBLE
+                        binding.uploadSpinner.visibility = View.GONE
+                        binding.uploadIcon.visibility = View.VISIBLE
+                        binding.uploadIcon.setImageResource(android.R.drawable.checkbox_on_background)
+                        binding.uploadIcon.setColorFilter(ContextCompat.getColor(this@StartActivity, R.color.success))
+
+                        binding.tvUploadStatus.text = "Загрузка завершена"
+                        binding.tvUploadDetails.text = "Видео успешно отправлено"
+                        binding.tvUploadPercent.text = "✓"
+                        binding.tvUploadPercent.setTextColor(ContextCompat.getColor(this@StartActivity, R.color.success))
+                        binding.uploadProgressBar.progress = 100
+                        binding.uploadProgressBar.progressTintList = android.content.res.ColorStateList.valueOf(
+                            ContextCompat.getColor(this@StartActivity, R.color.success)
+                        )
+                    }
+                    is UploadManager.UploadState.Error -> {
+                        binding.uploadStatusCard.visibility = View.VISIBLE
+                        binding.uploadSpinner.visibility = View.GONE
+                        binding.uploadIcon.visibility = View.VISIBLE
+                        binding.uploadIcon.setImageResource(android.R.drawable.ic_delete)
+                        binding.uploadIcon.setColorFilter(ContextCompat.getColor(this@StartActivity, R.color.error))
+
+                        binding.tvUploadStatus.text = "Ошибка загрузки"
+                        binding.tvUploadDetails.text = state.message
+                        binding.tvUploadPercent.text = "!"
+                        binding.tvUploadPercent.setTextColor(ContextCompat.getColor(this@StartActivity, R.color.error))
+                        binding.uploadProgressBar.progress = 0
+                        binding.uploadProgressBar.progressTintList = android.content.res.ColorStateList.valueOf(
+                            ContextCompat.getColor(this@StartActivity, R.color.error)
+                        )
+
+                        // Скрываем ошибку через 5 секунд
+                        binding.uploadStatusCard.postDelayed({
+                            UploadManager.resetState()
+                        }, 5000)
+                    }
+                }
+            }
+        }
+
+        // Кнопка закрытия уведомления о загрузке
+        binding.btnCloseUpload.setOnClickListener {
+            UploadManager.resetState()
+        }
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
@@ -116,12 +193,31 @@ class StartActivity : ComponentActivity() {
             }
         }
 
-        binding.btnProfile.setOnClickListener {
-            if (isRecording) {
-                stopReason = StopReason.USER
-                stopRecording()
-            } else {
-                openPersonal()
+        binding.bottomNavigation.selectedItemId = R.id.nav_home
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> true
+                R.id.nav_violations -> {
+                    if (!isRecording) {
+                        val intent = Intent(this, PersonalActivity::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                        startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
+                            this, 0, 0
+                        ).toBundle())
+                    }
+                    true
+                }
+                R.id.nav_profile -> {
+                    if (!isRecording) {
+                        val intent = Intent(this, ProfileActivity::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                        startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
+                            this, 0, 0
+                        ).toBundle())
+                    }
+                    true
+                }
+                else -> false
             }
         }
     }
@@ -142,12 +238,9 @@ class StartActivity : ComponentActivity() {
     }
 
     private fun isLocationEnabled(): Boolean {
-        val locationMode = Settings.Secure.getInt(
-            contentResolver,
-            Settings.Secure.LOCATION_MODE,
-            Settings.Secure.LOCATION_MODE_OFF
-        )
-        return locationMode != Settings.Secure.LOCATION_MODE_OFF
+        val locationManager = getSystemService(LOCATION_SERVICE) as android.location.LocationManager
+        return locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
     }
 
     private fun checkLocationServicesAndEnable() {
@@ -293,7 +386,8 @@ class StartActivity : ComponentActivity() {
                 when (event) {
                     is VideoRecordEvent.Start -> {
                         isRecording = true
-                        binding.btnRec.text = "STOP"
+                        animateRecordingStart()
+                        binding.timerCard.isVisible = true
                         binding.timer.isVisible = true
                         startCountdownTimer()
                     }
@@ -302,7 +396,8 @@ class StartActivity : ComponentActivity() {
 
                         val file = lastVideoFile
                         isRecording = false
-                        binding.btnRec.text = "REC"
+                        animateRecordingStop()
+                        binding.timerCard.isVisible = false
                         binding.timer.isVisible = false
                         countDownTimer?.cancel()
 
@@ -360,8 +455,85 @@ class StartActivity : ComponentActivity() {
         }.start()
     }
 
-    private fun openPersonal() {
-        startActivity(Intent(this, PersonalActivity::class.java))
+    private fun animateRecordingStart() {
+        // Отменяем все предыдущие анимации
+        binding.recButtonInner.clearAnimation()
+        binding.recButtonCard.clearAnimation()
+        binding.recButtonInner.animate().cancel()
+        binding.recButtonCard.animate().cancel()
+        
+        // Сбрасываем scale на случай если была прервана предыдущая анимация
+        binding.recButtonInner.scaleX = 1f
+        binding.recButtonInner.scaleY = 1f
+        binding.recButtonCard.scaleX = 1f
+        binding.recButtonCard.scaleY = 1f
+        
+        // Меняем фон
+        binding.recButtonInner.setBackgroundResource(R.drawable.rec_button_recording_modern)
+        
+        // Плавная анимация уменьшения внутренней кнопки
+        binding.recButtonInner.animate()
+            .scaleX(0.5f)
+            .scaleY(0.5f)
+            .setDuration(200)
+            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .start()
+
+        // Легкое увеличение внешнего кольца
+        binding.recButtonCard.animate()
+            .scaleX(1.08f)
+            .scaleY(1.08f)
+            .setDuration(200)
+            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .start()
+
+        // Пульсация
+        binding.pulseRing.visibility = View.VISIBLE
+        val pulseAnimation = AnimationUtils.loadAnimation(this, R.anim.pulse_animation)
+        binding.pulseRing.startAnimation(pulseAnimation)
+
+        // Скрытие подсказки
+        binding.tvHint.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .start()
+    }
+
+    private fun animateRecordingStop() {
+        // Отменяем все предыдущие анимации
+        binding.recButtonInner.clearAnimation()
+        binding.recButtonCard.clearAnimation()
+        binding.recButtonInner.animate().cancel()
+        binding.recButtonCard.animate().cancel()
+        
+        // Меняем фон обратно на круг
+        binding.recButtonInner.setBackgroundResource(R.drawable.rec_button_idle_modern)
+        
+        // Плавная анимация возврата внутренней кнопки
+        binding.recButtonInner.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(200)
+            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .start()
+
+        // Возврат внешнего кольца
+        binding.recButtonCard.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(200)
+            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .start()
+
+        // Остановка пульсации
+        binding.pulseRing.clearAnimation()
+        binding.pulseRing.visibility = View.GONE
+
+        // Показ подсказки
+        binding.tvHint.animate()
+            .alpha(1f)
+            .setDuration(200)
+            .start()
     }
 
     override fun onDestroy() {
@@ -369,5 +541,7 @@ class StartActivity : ComponentActivity() {
         stopLocationTracking()
         locationExecutor.shutdown()
         guaranteedLocationTimer?.cancel()
+        pulseAnimator?.cancel()
+        binding.pulseRing.clearAnimation()
     }
 }

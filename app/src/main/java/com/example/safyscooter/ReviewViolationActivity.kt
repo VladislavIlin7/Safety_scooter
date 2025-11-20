@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
@@ -14,12 +15,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import org.json.JSONArray
+import kotlin.math.roundToInt
 
 class ReviewViolationActivity : ComponentActivity() {
 
@@ -27,107 +29,72 @@ class ReviewViolationActivity : ComponentActivity() {
     private var videoPath: String? = null
     private var startTimestamp: Long = 0L
     private var locations: List<Pair<Double, Double>> = emptyList()
-
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .build()
+    private var isVideoPlaying = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityReviewBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.toolbar.setNavigationOnClickListener {
+            finish()
+        }
+
         videoPath = intent.getStringExtra("VIDEO_PATH")
         startTimestamp = intent.getLongExtra("START_TIMESTAMP", System.currentTimeMillis())
 
-        val locationsArray = intent.getSerializableExtra("LOCATIONS") as? Array<DoubleArray>
+        @Suppress("DEPRECATION")
+        val locationsArray = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            intent.getSerializableExtra("LOCATIONS", Array<DoubleArray>::class.java)
+        } else {
+            intent.getSerializableExtra("LOCATIONS") as? Array<DoubleArray>
+        }
         locations = locationsArray?.map {
             Pair(it[0], it[1])
         } ?: emptyList()
 
         val (thumb, durationSec) = extractMeta(videoPath)
         if (thumb != null) binding.ivThumb.setImageBitmap(thumb)
-        binding.tvDuration.text = "Длительность: ${durationSec}s"
+        binding.tvDuration.text = "${durationSec} сек"
         binding.tvDate.text = formatTs(startTimestamp * 1000)
+        
+        // Показываем реальный размер файла
+        val videoFile = File(videoPath ?: "")
+        if (videoFile.exists()) {
+            val fileSizeInMB = videoFile.length() / (1024.0 * 1024.0)
+            binding.tvFileSize.text = String.format("%.2f MB", fileSizeInMB)
+        } else {
+            binding.tvFileSize.text = "Н/Д"
+        }
+        
+        // Настройка просмотра видео
+        setupVideoPlayer()
 
         binding.btnSend.setOnClickListener {
-            binding.btnSend.isEnabled = false
-            binding.btnDelete.isEnabled = false
-
-            lifecycleScope.launch {
-                try {
-                    uploadViolation()
-                    withContext(Dispatchers.Main) {
-                        val nextIndex = ViolationStore.items.size + 1
-                        ViolationStore.items.add(
-                            0, ViolationUi(id = startTimestamp, title = "нарушение $nextIndex", timestamp = startTimestamp)
-                        )
-                        Toast.makeText(this@ReviewViolationActivity, "Успешно отправлено", Toast.LENGTH_LONG).show()
-                        goToPersonal()
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        binding.btnSend.isEnabled = true
-                        binding.btnDelete.isEnabled = true
-                        Toast.makeText(this@ReviewViolationActivity, e.message, Toast.LENGTH_LONG).show()
-                    }
-                }
+            val accessToken = getAccessToken()
+            if (accessToken.isNotBlank() && videoPath != null) {
+                UploadManager.startUpload(accessToken, videoPath!!, startTimestamp, locations)
+                
+                Toast.makeText(this, "Загрузка началась в фоне", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this, StartActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                startActivity(intent)
+                finish()
+            } else {
+                Toast.makeText(this, "Ошибка данных", Toast.LENGTH_SHORT).show()
             }
         }
 
         binding.btnDelete.setOnClickListener {
             videoPath?.let { File(it).delete() }
-            goToPersonal()
+            val intent = Intent(this, StartActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
+            finish()
         }
     }
 
-    private suspend fun uploadViolation() = withContext(Dispatchers.IO) {
-        val videoFile = File(videoPath ?: throw Exception("Ошибка: видео не найдено"))
-        if (!videoFile.exists()) {
-            throw Exception("Ошибка: файл видео не существует")
-        }
-
-        val accessToken = getAccessToken()
-        if (accessToken.isBlank()) {
-            throw Exception("Ошибка: пользователь не авторизован")
-        }
-
-        val gpsJsonArray = JSONArray().apply {
-            locations.forEach { location ->
-                put("${location.first},${location.second}")
-            }
-        }
-
-        val requestBody = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart("gps", gpsJsonArray.toString())
-            .addFormDataPart("time", startTimestamp.toString())
-            .addFormDataPart(
-                "file",
-                "video_${startTimestamp}.mp4",
-                videoFile.asRequestBody("application/octet-stream".toMediaTypeOrNull())
-            )
-            .build()
-
-        val request = Request.Builder()
-            .url("https://safetyscooter.ru/video/upload")
-            .post(requestBody)
-            .header("Authorization", accessToken)
-            .build()
-
-        client.newCall(request).execute().use { response ->
-            val responseBody = response.body?.string()
-            when (response.code) {
-                200 -> { }
-                401 -> throw Exception("Ошибка авторизации: 401")
-                422 -> throw Exception("Ошибка валидации: 422")
-                500 -> throw Exception("Внутренняя ошибка сервера: 500")
-                else -> throw Exception("Ошибка сервера: ${response.code}")
-            }
-        }
-    }
+    // Удаляем локальный uploadViolation и ProgressRequestBody - они теперь в UploadManager
 
     private fun getAccessToken(): String {
         val sharedPref = getSharedPreferences("app_prefs", MODE_PRIVATE)
@@ -156,4 +123,77 @@ class ReviewViolationActivity : ComponentActivity() {
 
     private fun formatTs(ts: Long): String =
         SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(ts))
+    
+    private fun setupVideoPlayer() {
+        binding.videoPreviewCard.setOnClickListener {
+            if (!isVideoPlaying) {
+                playVideo()
+            } else {
+                pauseVideo()
+            }
+        }
+        
+        binding.playButton.setOnClickListener {
+            if (!isVideoPlaying) {
+                playVideo()
+            } else {
+                pauseVideo()
+            }
+        }
+    }
+    
+    private fun playVideo() {
+        videoPath?.let { path ->
+            binding.videoView.setVideoPath(path)
+            binding.videoView.visibility = View.VISIBLE
+            binding.ivThumb.visibility = View.GONE
+            binding.overlayView.visibility = View.GONE
+            binding.playButton.visibility = View.GONE
+            
+            binding.videoView.setOnPreparedListener { mediaPlayer ->
+                mediaPlayer.isLooping = true
+                binding.videoView.start()
+                isVideoPlaying = true
+            }
+            
+            binding.videoView.setOnCompletionListener {
+                // Видео зациклено, но на случай если что-то пойдет не так
+                if (!isVideoPlaying) {
+                    pauseVideo()
+                }
+            }
+            
+            binding.videoView.setOnErrorListener { _, _, _ ->
+                Toast.makeText(this, "Ошибка воспроизведения видео", Toast.LENGTH_SHORT).show()
+                pauseVideo()
+                true
+            }
+        }
+    }
+    
+    private fun pauseVideo() {
+        if (binding.videoView.isPlaying) {
+            binding.videoView.pause()
+        }
+        binding.videoView.visibility = View.GONE
+        binding.ivThumb.visibility = View.VISIBLE
+        binding.overlayView.visibility = View.VISIBLE
+        binding.playButton.visibility = View.VISIBLE
+        binding.playButton.setImageResource(android.R.drawable.ic_media_play)
+        isVideoPlaying = false
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        if (isVideoPlaying) {
+            pauseVideo()
+        }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        if (binding.videoView.isPlaying) {
+            binding.videoView.stopPlayback()
+        }
+    }
 }

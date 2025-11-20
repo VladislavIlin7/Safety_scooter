@@ -3,6 +3,7 @@ package com.example.safyscooter
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -28,14 +29,16 @@ class RegistrationActivity : Activity() {
         val userPhone: EditText = findViewById(R.id.user_phone)
         val userPass: EditText = findViewById(R.id.user_pass)
         val btnReg: Button = findViewById(R.id.btn_register)
-        val linkToAuth: TextView = findViewById(R.id.link_auth)
+        val cardLogin: View = findViewById(R.id.cardLogin)
 
         userPhone.setText("+7")
         userPhone.setSelection(userPhone.text.length)
 
-        linkToAuth.setOnClickListener {
+        cardLogin.setOnClickListener {
             val intent = Intent(this, AuthActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             startActivity(intent)
+            finish()
         }
 
         btnReg.setOnClickListener {
@@ -93,6 +96,7 @@ class RegistrationActivity : Activity() {
                             val intent = Intent(this@RegistrationActivity, StartActivity::class.java)
                             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             startActivity(intent)
+                            finish()
                         }
                     } else if (response.code == 409) {
                         withContext(Dispatchers.Main) {

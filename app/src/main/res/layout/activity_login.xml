@@ -80,7 +80,7 @@
                     app:boxCornerRadiusBottomEnd="16dp"
                     app:boxStrokeColor="@color/primary"
                     app:hintTextColor="@color/text_secondary"
-                    app:startIconDrawable="@android:drawable/ic_menu_call"
+                    app:startIconDrawable="@drawable/ic_phone_outline"
                     app:startIconTint="@color/primary">
 
                     <com.google.android.material.textfield.TextInputEditText
@@ -106,7 +106,7 @@
                     app:boxCornerRadiusBottomEnd="16dp"
                     app:boxStrokeColor="@color/primary"
                     app:hintTextColor="@color/text_secondary"
-                    app:startIconDrawable="@android:drawable/ic_lock_lock"
+                    app:startIconDrawable="@drawable/ic_lock_outline"
                     app:startIconTint="@color/primary"
                     app:endIconMode="password_toggle"
                     app:endIconTint="@color/primary">
@@ -179,6 +179,7 @@
             android:layout_marginBottom="32dp"
             android:clickable="true"
             android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
             app:cardCornerRadius="16dp"
             app:cardElevation="0dp"
             app:strokeWidth="2dp"

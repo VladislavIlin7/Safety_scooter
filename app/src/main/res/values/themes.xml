@@ -63,7 +63,7 @@
         <item name="strokeColor">@color/primary</item>
         <item name="strokeWidth">2dp</item>
     </style>
-    
+
     <style name="Widget.SafetyScooter.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="boxCornerRadiusTopStart">16dp</item>
         <item name="boxCornerRadiusTopEnd">16dp</item>
@@ -72,6 +72,18 @@
         <item name="boxStrokeWidth">2dp</item>
         <item name="boxStrokeColor">@color/primary</item>
         <item name="hintTextColor">@color/text_secondary</item>
+    </style>
+    
+    <style name="Widget.SafetyScooter.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="itemActiveIndicatorStyle">@style/Widget.SafetyScooter.BottomNavigationView.ActiveIndicator</item>
+        <item name="itemIconTint">@color/bottom_nav_color</item>
+        <item name="itemTextColor">@color/bottom_nav_color</item>
+        <item name="android:background">@color/surface</item>
+    </style>
+
+    <style name="Widget.SafetyScooter.BottomNavigationView.ActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/primary_container</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.SafetyScooter.MediumComponent</item>
     </style>
     
     <style name="Widget.SafetyScooter.Card" parent="Widget.Material3.CardView.Elevated">

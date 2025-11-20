@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -27,10 +28,25 @@ class ApplicationAdapter(
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
         private val tvDate: TextView = itemView.findViewById(R.id.tvDate)
+        private val tvStatus: TextView = itemView.findViewById(R.id.tvStatus)
+        private val statusIndicator: View = itemView.findViewById(R.id.statusIndicator)
 
         fun bind(application: Application) {
-            tvTitle.text = "Заявка #${application.localNumber}"
+            val context = itemView.context
+            
+            tvTitle.text = if (application.verdicts.isNotEmpty()) {
+                "Заявка #${application.localNumber} • ${application.verdicts.size} вердикт(а/ов)"
+            } else {
+                "Заявка #${application.localNumber}"
+            }
+            
             tvDate.text = application.getFormattedDate()
+            
+            tvStatus.text = application.status
+            
+            val statusColor = ContextCompat.getColor(context, application.getStatusColor())
+            tvStatus.setTextColor(statusColor)
+            statusIndicator.setBackgroundColor(statusColor)
         }
     }
 

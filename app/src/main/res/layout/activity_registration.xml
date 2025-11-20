@@ -17,7 +17,7 @@
             android:id="@+id/topDecoration"
             android:layout_width="80dp"
             android:layout_height="4dp"
-            android:background="@color/secondary"
+            android:background="@color/primary"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -78,10 +78,10 @@
                     app:boxCornerRadiusTopEnd="16dp"
                     app:boxCornerRadiusBottomStart="16dp"
                     app:boxCornerRadiusBottomEnd="16dp"
-                    app:boxStrokeColor="@color/secondary"
+                    app:boxStrokeColor="@color/primary"
                     app:hintTextColor="@color/text_secondary"
-                    app:startIconDrawable="@android:drawable/ic_menu_call"
-                    app:startIconTint="@color/secondary">
+                    app:startIconDrawable="@drawable/ic_phone_outline"
+                    app:startIconTint="@color/primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/user_phone"
@@ -104,12 +104,12 @@
                     app:boxCornerRadiusTopEnd="16dp"
                     app:boxCornerRadiusBottomStart="16dp"
                     app:boxCornerRadiusBottomEnd="16dp"
-                    app:boxStrokeColor="@color/secondary"
+                    app:boxStrokeColor="@color/primary"
                     app:hintTextColor="@color/text_secondary"
-                    app:startIconDrawable="@android:drawable/ic_lock_lock"
-                    app:startIconTint="@color/secondary"
+                    app:startIconDrawable="@drawable/ic_lock_outline"
+                    app:startIconTint="@color/primary"
                     app:endIconMode="password_toggle"
-                    app:endIconTint="@color/secondary">
+                    app:endIconTint="@color/primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/user_pass"
@@ -141,7 +141,6 @@
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginTop="32dp"
-            android:backgroundTint="@color/secondary"
             app:cornerRadius="16dp"
             app:layout_constraintTop_toBottomOf="@id/cardInputs"
             app:layout_constraintStart_toStartOf="parent"
@@ -188,11 +187,12 @@
             android:layout_marginBottom="32dp"
             android:clickable="true"
             android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
             app:cardCornerRadius="16dp"
             app:cardElevation="0dp"
             app:strokeWidth="2dp"
-            app:strokeColor="@color/secondary"
-            app:cardBackgroundColor="@color/secondary_container"
+            app:strokeColor="@color/primary"
+            app:cardBackgroundColor="@color/primary_container"
             app:layout_constraintTop_toBottomOf="@id/dividerLayout"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -217,7 +217,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Войти"
-                    android:textColor="@color/secondary"
+                    android:textColor="@color/primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
             </LinearLayout>

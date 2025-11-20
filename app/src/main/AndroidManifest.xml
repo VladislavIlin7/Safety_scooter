@@ -42,15 +42,21 @@
             android:exported="false" />
         <activity android:name=".StartActivity"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             android:exported="false" />
         <activity android:name=".PersonalActivity"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             android:exported="false" />
         <activity android:name=".ReviewViolationActivity"
             android:screenOrientation="portrait"
             android:exported="false" />
         <activity android:name=".ViolationDetailsActivity"
             android:screenOrientation="portrait"
+            android:exported="false" />
+        <activity android:name=".ProfileActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             android:exported="false" />
 
     </application>

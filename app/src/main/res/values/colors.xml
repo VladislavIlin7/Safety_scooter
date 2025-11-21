@@ -1,5 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="primary">#2563EB</color>
+    <color name="primary_dark">#1E40AF</color>
+    <color name="primary_light">#3B82F6</color>
+    <color name="primary_container">#DBEAFE</color>
+    
+    <color name="secondary">#8B5CF6</color>
+    <color name="secondary_dark">#7C3AED</color>
+    <color name="secondary_light">#A78BFA</color>
+    <color name="secondary_container">#EDE9FE</color>
+    
+    <color name="tertiary">#06B6D4</color>
+    <color name="tertiary_dark">#0891B2</color>
+    <color name="tertiary_light">#22D3EE</color>
+    <color name="tertiary_container">#CFFAFE</color>
+    
+    <color name="background">#F8FAFC</color>
+    <color name="background_secondary">#F1F5F9</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F8FAFC</color>
+    
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#475569</color>
+    <color name="text_tertiary">#94A3B8</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    
+    <color name="success">#10B981</color>
+    <color name="success_light">#D1FAE5</color>
+    <color name="error">#EF4444</color>
+    <color name="error_light">#FEE2E2</color>
+    <color name="warning">#F59E0B</color>
+    <color name="warning_light">#FEF3C7</color>
+    <color name="info">#3B82F6</color>
+    <color name="info_light">#DBEAFE</color>
+    
+    <color name="recording_red">#DC2626</color>
+    <color name="recording_bg">#FEE2E2</color>
+    
+    <color name="divider">#E2E8F0</color>
+    <color name="outline">#CBD5E1</color>
+    
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    
+    <color name="shadow">#1A000000</color>
+    <color name="overlay">#80000000</color>
+    
+    <color name="dark_background">#0F172A</color>
+    <color name="dark_surface">#1E293B</color>
+    <color name="dark_surface_variant">#334155</color>
+    <color name="dark_text_primary">#F1F5F9</color>
+    <color name="dark_text_secondary">#CBD5E1</color>
 </resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@android:drawable/ic_menu_camera"
+        android:title="Камера" />
+    <item
+        android:id="@+id/nav_violations"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="Нарушения" />
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@android:drawable/ic_menu_myplaces"
+        android:title="Профиль" />
+</menu>
+

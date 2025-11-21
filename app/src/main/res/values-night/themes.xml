@@ -1,7 +1,31 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.SafyScooter" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+    <style name="Base.Theme.SafetyScooter" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/primary_light</item>
+        <item name="colorPrimaryVariant">@color/primary</item>
+        <item name="colorOnPrimary">@color/dark_background</item>
+        <item name="colorPrimaryContainer">@color/primary_dark</item>
+        <item name="colorSecondary">@color/secondary_light</item>
+        <item name="colorSecondaryVariant">@color/secondary</item>
+        <item name="colorOnSecondary">@color/dark_background</item>
+        <item name="colorSecondaryContainer">@color/secondary_dark</item>
+        <item name="colorTertiary">@color/tertiary_light</item>
+        <item name="colorTertiaryContainer">@color/tertiary_dark</item>
+        <item name="android:colorBackground">@color/dark_background</item>
+        <item name="colorSurface">@color/dark_surface</item>
+        <item name="colorSurfaceVariant">@color/dark_surface_variant</item>
+        <item name="colorOnBackground">@color/dark_text_primary</item>
+        <item name="colorOnSurface">@color/dark_text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/dark_text_secondary</item>
+        <item name="android:statusBarColor">@color/dark_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/dark_background</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/white</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.SafetyScooter.SmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.SafetyScooter.MediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.SafetyScooter.LargeComponent</item>
+        <item name="materialButtonStyle">@style/Widget.SafetyScooter.Button</item>
+        <item name="textInputStyle">@style/Widget.SafetyScooter.TextInputLayout</item>
     </style>
 </resources>

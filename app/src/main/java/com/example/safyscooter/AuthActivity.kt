@@ -3,6 +3,7 @@ package com.example.safyscooter
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -29,14 +30,16 @@ class AuthActivity : Activity() {
         val userPhoneAuth: EditText = findViewById(R.id.user_phone_auth)
         val userPassAuth: EditText = findViewById(R.id.user_pass_auth)
         val btnAuth: Button = findViewById(R.id.btn_auth)
-        val linkToReg: TextView = findViewById(R.id.link_reg)
+        val cardRegister: View = findViewById(R.id.cardRegister)
 
         userPhoneAuth.setText("+7")
         userPhoneAuth.setSelection(userPhoneAuth.text.length)
 
-        linkToReg.setOnClickListener {
+        cardRegister.setOnClickListener {
             val intent = Intent(this, RegistrationActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             startActivity(intent)
+            finish()
         }
 
         btnAuth.setOnClickListener {
@@ -92,6 +95,7 @@ class AuthActivity : Activity() {
                             Toast.makeText(this@AuthActivity, "Авторизация успешна!",
                                 Toast.LENGTH_LONG).show()
                             val intent = Intent(this@AuthActivity, StartActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             startActivity(intent)
                             finish()
                         }

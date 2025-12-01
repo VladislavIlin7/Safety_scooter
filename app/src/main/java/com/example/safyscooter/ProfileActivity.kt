@@ -24,6 +24,7 @@ class ProfileActivity : AppCompatActivity() {
                     startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
                         this, 0, 0
                     ).toBundle())
+                    finish()
                     true
                 }
                 R.id.nav_violations -> {
@@ -32,6 +33,7 @@ class ProfileActivity : AppCompatActivity() {
                     startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
                         this, 0, 0
                     ).toBundle())
+                    finish()
                     true
                 }
                 R.id.nav_profile -> true

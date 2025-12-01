@@ -26,6 +26,7 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.safyscooter.databinding.ActivityStartBinding
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -34,6 +35,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.Executors
@@ -96,6 +98,7 @@ class StartActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityStartBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -196,7 +199,10 @@ class StartActivity : ComponentActivity() {
         binding.bottomNavigation.selectedItemId = R.id.nav_home
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_home -> true
+                R.id.nav_home -> {
+                    finish()
+                    true
+                }
                 R.id.nav_violations -> {
                     if (!isRecording) {
                         val intent = Intent(this, PersonalActivity::class.java)
@@ -204,6 +210,7 @@ class StartActivity : ComponentActivity() {
                         startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
                             this, 0, 0
                         ).toBundle())
+                        finish()
                     }
                     true
                 }
@@ -214,6 +221,7 @@ class StartActivity : ComponentActivity() {
                         startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
                             this, 0, 0
                         ).toBundle())
+                        finish()
                     }
                     true
                 }

@@ -45,6 +45,7 @@ class PersonalActivity : ComponentActivity() {
                     startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
                         this, 0, 0
                     ).toBundle())
+                    finish()
                     true
                 }
                 R.id.nav_violations -> true
@@ -54,6 +55,7 @@ class PersonalActivity : ComponentActivity() {
                     startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
                         this, 0, 0
                     ).toBundle())
+                    finish()
                     true
                 }
                 else -> false

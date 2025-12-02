@@ -2,12 +2,12 @@ package com.example.safyscooter
 
 import android.Manifest
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.view.View
@@ -26,7 +26,6 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.safyscooter.databinding.ActivityStartBinding
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -35,7 +34,6 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.Executors
@@ -50,6 +48,8 @@ class StartActivity : ComponentActivity() {
     private var lastVideoFile: File? = null
     private var recordingStartTime: Long = 0
     private var pulseAnimator: ObjectAnimator? = null
+    private var locationSettingsShownInThisSession = false
+    private var returningFromSettings = false
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val locationList = mutableListOf<Pair<Double, Double>>()
@@ -73,7 +73,6 @@ class StartActivity : ComponentActivity() {
     private val locationExecutor = Executors.newSingleThreadScheduledExecutor()
     private var guaranteedLocationTimer: CountDownTimer? = null
 
-
     private enum class StopReason { NONE, USER, TIMER }
     private var stopReason: StopReason = StopReason.NONE
 
@@ -85,46 +84,13 @@ class StartActivity : ComponentActivity() {
             checkAndRequestLocationPermission()
         }
 
-
-    private fun checkLocationPermissionOnStart() {
-        if (!hasLocationPermission()) {
-            requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        } else if (!isLocationEnabled()) {
-            checkLocationServicesAndEnable()
-        }
-    }
-
-
-    private fun checkAllPermissionsAndStartRecording() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            requestCameraOnlyLauncher.launch(Manifest.permission.CAMERA)
-            return
-        }
-
-        if (!hasLocationPermission()) {
-            requestLocationOnlyLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-            return
-        }
-
-        if (!isLocationEnabled()) {
-            checkLocationServicesAndEnable()
-            return
-        }
-
-        startRecording()
-    }
-
-
-    private val requestCameraForRecordingLauncher =
+    private val requestCameraOnlyLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 startCamera()
                 checkAllPermissionsAndStartRecording()
             }
         }
-
 
     private val requestLocationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -136,16 +102,6 @@ class StartActivity : ComponentActivity() {
             }
         }
 
-
-    private val requestCameraOnlyLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isGranted) {
-                startCamera()
-                checkAllPermissionsAndStartRecording()
-            }
-        }
-
-
     private val requestLocationOnlyLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
@@ -156,35 +112,38 @@ class StartActivity : ComponentActivity() {
                     if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                         == PackageManager.PERMISSION_GRANTED
                     ) {
-                        startRecording()
-                    } else {
-                        checkAllPermissionsAndStartRecording()
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            startRecording()
+                        }, 200)
                     }
                 }
             }
         }
 
-
     private val locationSettingsLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (isLocationEnabled()) {
-                checkAllPermissionsAndStartRecording()
-            }
         }
 
+    override fun onResume() {
+        super.onResume()
 
-    private fun checkAndRequestLocationPermission() {
-        if (!hasLocationPermission()) {
-            requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        } else if (!isLocationEnabled() && !locationServiceRequested) {
-            locationServiceRequested = true
-            checkLocationServicesAndEnable()
+        if (returningFromSettings) {
+            returningFromSettings = false
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                if (isLocationEnabled()) {
+                    locationSettingsShownInThisSession = false
+                }
+            }, 300)
         }
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (savedInstanceState != null) {
+            returningFromSettings = true
+        }
 
         binding = ActivityStartBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -258,19 +217,21 @@ class StartActivity : ComponentActivity() {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            == PackageManager.PERMISSION_GRANTED
-        ) {
-            startCamera()
-            checkAndRequestLocationPermission()
+        if (!returningFromSettings) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED
+            ) {
+                startCamera()
+                checkAndRequestLocationPermission()
+            } else {
+                requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
         } else {
-            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-
-        if (!hasLocationPermission()) {
-            requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        } else if (!isLocationEnabled()) {
-            checkLocationServicesAndEnable()
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED
+            ) {
+                startCamera()
+            }
         }
 
         binding.btnRec.setOnClickListener {
@@ -316,14 +277,35 @@ class StartActivity : ComponentActivity() {
         }
     }
 
+    private fun checkAllPermissionsAndStartRecording() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestCameraOnlyLauncher.launch(Manifest.permission.CAMERA)
+            return
+        }
 
-    private fun checkPermissionsOnAppStart() {
+        if (!hasLocationPermission()) {
+            requestLocationOnlyLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            return
+        }
+
+        if (!isLocationEnabled()) {
+            // Сбрасываем флаг для нового шанса при нажатии кнопки
+            locationSettingsShownInThisSession = false
+            checkLocationServicesAndEnable()
+            return
+        }
+
+        startRecording()
+    }
+
+    private fun checkAndRequestLocationPermission() {
         if (!hasLocationPermission()) {
             requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        } else {
-            if (!isLocationEnabled()) {
-                checkLocationServicesAndEnable()
-            }
+        } else if (!isLocationEnabled() && !locationServiceRequested) {
+            locationServiceRequested = true
+            checkLocationServicesAndEnable()
         }
     }
 
@@ -341,23 +323,14 @@ class StartActivity : ComponentActivity() {
     }
 
     private fun checkLocationServicesAndEnable() {
-        if (!isLocationEnabled()) {
-            locationServiceRequested = true
+        if (!isLocationEnabled() && !locationSettingsShownInThisSession) {
+            locationSettingsShownInThisSession = true
             val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
             locationSettingsLauncher.launch(intent)
+        } else if (!isLocationEnabled()) {
+            return
         } else {
-            if (isRecording) {
-                return
-            }
-
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED &&
-                hasLocationPermission()
-            ) {
-                startRecording()
-            } else {
-                checkAllPermissionsAndStartRecording()
-            }
+            return
         }
     }
 
@@ -571,14 +544,14 @@ class StartActivity : ComponentActivity() {
         binding.recButtonCard.clearAnimation()
         binding.recButtonInner.animate().cancel()
         binding.recButtonCard.animate().cancel()
-        
+
         binding.recButtonInner.scaleX = 1f
         binding.recButtonInner.scaleY = 1f
         binding.recButtonCard.scaleX = 1f
         binding.recButtonCard.scaleY = 1f
-        
+
         binding.recButtonInner.setBackgroundResource(R.drawable.rec_button_recording_modern)
-        
+
         binding.recButtonInner.animate()
             .scaleX(0.5f)
             .scaleY(0.5f)
@@ -608,9 +581,9 @@ class StartActivity : ComponentActivity() {
         binding.recButtonCard.clearAnimation()
         binding.recButtonInner.animate().cancel()
         binding.recButtonCard.animate().cancel()
-        
+
         binding.recButtonInner.setBackgroundResource(R.drawable.rec_button_idle_modern)
-        
+
         binding.recButtonInner.animate()
             .scaleX(1f)
             .scaleY(1f)

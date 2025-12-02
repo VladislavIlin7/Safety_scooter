@@ -54,6 +54,7 @@ class StartActivity : ComponentActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val locationList = mutableListOf<Pair<Double, Double>>()
     private var isTrackingLocation = false
+    private var locationServiceRequested = false
 
     private val locationRequest = LocationRequest.Builder(
         Priority.PRIORITY_HIGH_ACCURACY, 100
@@ -80,21 +81,107 @@ class StartActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 startCamera()
-                checkAndRequestLocationPermission()
+            }
+            checkAndRequestLocationPermission()
+        }
+
+
+    private fun checkLocationPermissionOnStart() {
+        if (!hasLocationPermission()) {
+            requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        } else if (!isLocationEnabled()) {
+            checkLocationServicesAndEnable()
+        }
+    }
+
+
+    private fun checkAllPermissionsAndStartRecording() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestCameraOnlyLauncher.launch(Manifest.permission.CAMERA)
+            return
+        }
+
+        if (!hasLocationPermission()) {
+            requestLocationOnlyLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            return
+        }
+
+        if (!isLocationEnabled()) {
+            checkLocationServicesAndEnable()
+            return
+        }
+
+        startRecording()
+    }
+
+
+    private val requestCameraForRecordingLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                startCamera()
+                checkAllPermissionsAndStartRecording()
             }
         }
+
 
     private val requestLocationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
-                checkLocationServicesAndEnable()
+                if (!isLocationEnabled() && !locationServiceRequested) {
+                    locationServiceRequested = true
+                    checkLocationServicesAndEnable()
+                }
             }
         }
 
+
+    private val requestCameraOnlyLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                startCamera()
+                checkAllPermissionsAndStartRecording()
+            }
+        }
+
+
+    private val requestLocationOnlyLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                if (!isLocationEnabled()) {
+                    locationServiceRequested = false
+                    checkLocationServicesAndEnable()
+                } else {
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                        == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        startRecording()
+                    } else {
+                        checkAllPermissionsAndStartRecording()
+                    }
+                }
+            }
+        }
+
+
     private val locationSettingsLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (isLocationEnabled()) {
+                checkAllPermissionsAndStartRecording()
+            }
+        }
+
+
+    private fun checkAndRequestLocationPermission() {
+        if (!hasLocationPermission()) {
+            requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        } else if (!isLocationEnabled() && !locationServiceRequested) {
+            locationServiceRequested = true
             checkLocationServicesAndEnable()
         }
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,7 +189,6 @@ class StartActivity : ComponentActivity() {
         binding = ActivityStartBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Подписываемся на обновления загрузки
         lifecycleScope.launch {
             UploadManager.uploadState.collect { state ->
                 when (state) {
@@ -158,7 +244,6 @@ class StartActivity : ComponentActivity() {
                             ContextCompat.getColor(this@StartActivity, R.color.error)
                         )
 
-                        // Скрываем ошибку через 5 секунд
                         binding.uploadStatusCard.postDelayed({
                             UploadManager.resetState()
                         }, 5000)
@@ -167,7 +252,6 @@ class StartActivity : ComponentActivity() {
             }
         }
 
-        // Кнопка закрытия уведомления о загрузке
         binding.btnCloseUpload.setOnClickListener {
             UploadManager.resetState()
         }
@@ -183,13 +267,15 @@ class StartActivity : ComponentActivity() {
             requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
 
+        if (!hasLocationPermission()) {
+            requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        } else if (!isLocationEnabled()) {
+            checkLocationServicesAndEnable()
+        }
+
         binding.btnRec.setOnClickListener {
             if (!isRecording) {
-                if (hasLocationPermission() && isLocationEnabled()) {
-                    startRecording()
-                } else {
-                    checkAndRequestLocationPermission()
-                }
+                checkAllPermissionsAndStartRecording()
             } else {
                 stopReason = StopReason.USER
                 stopRecording()
@@ -230,11 +316,14 @@ class StartActivity : ComponentActivity() {
         }
     }
 
-    private fun checkAndRequestLocationPermission() {
+
+    private fun checkPermissionsOnAppStart() {
         if (!hasLocationPermission()) {
             requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         } else {
-            checkLocationServicesAndEnable()
+            if (!isLocationEnabled()) {
+                checkLocationServicesAndEnable()
+            }
         }
     }
 
@@ -253,8 +342,22 @@ class StartActivity : ComponentActivity() {
 
     private fun checkLocationServicesAndEnable() {
         if (!isLocationEnabled()) {
+            locationServiceRequested = true
             val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
             locationSettingsLauncher.launch(intent)
+        } else {
+            if (isRecording) {
+                return
+            }
+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED &&
+                hasLocationPermission()
+            ) {
+                startRecording()
+            } else {
+                checkAllPermissionsAndStartRecording()
+            }
         }
     }
 
@@ -464,22 +567,18 @@ class StartActivity : ComponentActivity() {
     }
 
     private fun animateRecordingStart() {
-        // Отменяем все предыдущие анимации
         binding.recButtonInner.clearAnimation()
         binding.recButtonCard.clearAnimation()
         binding.recButtonInner.animate().cancel()
         binding.recButtonCard.animate().cancel()
         
-        // Сбрасываем scale на случай если была прервана предыдущая анимация
         binding.recButtonInner.scaleX = 1f
         binding.recButtonInner.scaleY = 1f
         binding.recButtonCard.scaleX = 1f
         binding.recButtonCard.scaleY = 1f
         
-        // Меняем фон
         binding.recButtonInner.setBackgroundResource(R.drawable.rec_button_recording_modern)
         
-        // Плавная анимация уменьшения внутренней кнопки
         binding.recButtonInner.animate()
             .scaleX(0.5f)
             .scaleY(0.5f)
@@ -487,7 +586,6 @@ class StartActivity : ComponentActivity() {
             .setInterpolator(android.view.animation.DecelerateInterpolator())
             .start()
 
-        // Легкое увеличение внешнего кольца
         binding.recButtonCard.animate()
             .scaleX(1.08f)
             .scaleY(1.08f)
@@ -495,12 +593,10 @@ class StartActivity : ComponentActivity() {
             .setInterpolator(android.view.animation.DecelerateInterpolator())
             .start()
 
-        // Пульсация
         binding.pulseRing.visibility = View.VISIBLE
         val pulseAnimation = AnimationUtils.loadAnimation(this, R.anim.pulse_animation)
         binding.pulseRing.startAnimation(pulseAnimation)
 
-        // Скрытие подсказки
         binding.tvHint.animate()
             .alpha(0f)
             .setDuration(200)
@@ -508,16 +604,13 @@ class StartActivity : ComponentActivity() {
     }
 
     private fun animateRecordingStop() {
-        // Отменяем все предыдущие анимации
         binding.recButtonInner.clearAnimation()
         binding.recButtonCard.clearAnimation()
         binding.recButtonInner.animate().cancel()
         binding.recButtonCard.animate().cancel()
         
-        // Меняем фон обратно на круг
         binding.recButtonInner.setBackgroundResource(R.drawable.rec_button_idle_modern)
         
-        // Плавная анимация возврата внутренней кнопки
         binding.recButtonInner.animate()
             .scaleX(1f)
             .scaleY(1f)
@@ -525,7 +618,6 @@ class StartActivity : ComponentActivity() {
             .setInterpolator(android.view.animation.DecelerateInterpolator())
             .start()
 
-        // Возврат внешнего кольца
         binding.recButtonCard.animate()
             .scaleX(1f)
             .scaleY(1f)
@@ -533,11 +625,9 @@ class StartActivity : ComponentActivity() {
             .setInterpolator(android.view.animation.DecelerateInterpolator())
             .start()
 
-        // Остановка пульсации
         binding.pulseRing.clearAnimation()
         binding.pulseRing.visibility = View.GONE
 
-        // Показ подсказки
         binding.tvHint.animate()
             .alpha(1f)
             .setDuration(200)

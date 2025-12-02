@@ -3,6 +3,7 @@ package com.example.safyscooter
 import android.Manifest
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -70,7 +71,6 @@ class StartActivity : ComponentActivity() {
     private val locationExecutor = Executors.newSingleThreadScheduledExecutor()
     private var guaranteedLocationTimer: CountDownTimer? = null
 
-
     private enum class StopReason { NONE, USER, TIMER }
     private var stopReason: StopReason = StopReason.NONE
 
@@ -90,10 +90,11 @@ class StartActivity : ComponentActivity() {
         }
 
     private val locationSettingsLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
             checkLocationServicesAndEnable()
         }
 
+    @SuppressLint("DefaultLocale", "SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityStartBinding.inflate(layoutInflater)
@@ -112,11 +113,20 @@ class StartActivity : ComponentActivity() {
                         binding.uploadIcon.visibility = View.GONE
                         binding.tvUploadStatus.text = "Загрузка видео..."
                         binding.tvUploadPercent.text = "${state.progress}%"
-                        binding.tvUploadPercent.setTextColor(ContextCompat.getColor(this@StartActivity, R.color.primary))
-                        binding.uploadProgressBar.progress = state.progress
-                        binding.uploadProgressBar.progressTintList = android.content.res.ColorStateList.valueOf(
-                            ContextCompat.getColor(this@StartActivity, R.color.primary)
+                        binding.tvUploadPercent.setTextColor(
+                            ContextCompat.getColor(
+                                this@StartActivity,
+                                R.color.primary
+                            )
                         )
+                        binding.uploadProgressBar.progress = state.progress
+                        binding.uploadProgressBar.progressTintList =
+                            android.content.res.ColorStateList.valueOf(
+                                ContextCompat.getColor(
+                                    this@StartActivity,
+                                    R.color.primary
+                                )
+                            )
 
                         binding.tvUploadDetails.text = String.format(
                             "%d%% • %.1f MB из %.1f MB",
@@ -128,32 +138,60 @@ class StartActivity : ComponentActivity() {
                         binding.uploadSpinner.visibility = View.GONE
                         binding.uploadIcon.visibility = View.VISIBLE
                         binding.uploadIcon.setImageResource(android.R.drawable.checkbox_on_background)
-                        binding.uploadIcon.setColorFilter(ContextCompat.getColor(this@StartActivity, R.color.success))
+                        binding.uploadIcon.setColorFilter(
+                            ContextCompat.getColor(
+                                this@StartActivity,
+                                R.color.success
+                            )
+                        )
 
                         binding.tvUploadStatus.text = "Загрузка завершена"
                         binding.tvUploadDetails.text = "Видео успешно отправлено"
                         binding.tvUploadPercent.text = "✓"
-                        binding.tvUploadPercent.setTextColor(ContextCompat.getColor(this@StartActivity, R.color.success))
-                        binding.uploadProgressBar.progress = 100
-                        binding.uploadProgressBar.progressTintList = android.content.res.ColorStateList.valueOf(
-                            ContextCompat.getColor(this@StartActivity, R.color.success)
+                        binding.tvUploadPercent.setTextColor(
+                            ContextCompat.getColor(
+                                this@StartActivity,
+                                R.color.success
+                            )
                         )
+                        binding.uploadProgressBar.progress = 100
+                        binding.uploadProgressBar.progressTintList =
+                            android.content.res.ColorStateList.valueOf(
+                                ContextCompat.getColor(
+                                    this@StartActivity,
+                                    R.color.success
+                                )
+                            )
                     }
                     is UploadManager.UploadState.Error -> {
                         binding.uploadStatusCard.visibility = View.VISIBLE
                         binding.uploadSpinner.visibility = View.GONE
                         binding.uploadIcon.visibility = View.VISIBLE
                         binding.uploadIcon.setImageResource(android.R.drawable.ic_delete)
-                        binding.uploadIcon.setColorFilter(ContextCompat.getColor(this@StartActivity, R.color.error))
+                        binding.uploadIcon.setColorFilter(
+                            ContextCompat.getColor(
+                                this@StartActivity,
+                                R.color.error
+                            )
+                        )
 
                         binding.tvUploadStatus.text = "Ошибка загрузки"
                         binding.tvUploadDetails.text = state.message
                         binding.tvUploadPercent.text = "!"
-                        binding.tvUploadPercent.setTextColor(ContextCompat.getColor(this@StartActivity, R.color.error))
-                        binding.uploadProgressBar.progress = 0
-                        binding.uploadProgressBar.progressTintList = android.content.res.ColorStateList.valueOf(
-                            ContextCompat.getColor(this@StartActivity, R.color.error)
+                        binding.tvUploadPercent.setTextColor(
+                            ContextCompat.getColor(
+                                this@StartActivity,
+                                R.color.error
+                            )
                         )
+                        binding.uploadProgressBar.progress = 0
+                        binding.uploadProgressBar.progressTintList =
+                            android.content.res.ColorStateList.valueOf(
+                                ContextCompat.getColor(
+                                    this@StartActivity,
+                                    R.color.error
+                                )
+                            )
 
                         // Скрываем ошибку через 5 секунд
                         binding.uploadStatusCard.postDelayed({
@@ -201,9 +239,12 @@ class StartActivity : ComponentActivity() {
                     if (!isRecording) {
                         val intent = Intent(this, PersonalActivity::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                        startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
-                            this, 0, 0
-                        ).toBundle())
+                        startActivity(
+                            intent,
+                            androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
+                                this, 0, 0
+                            ).toBundle()
+                        )
                     }
                     true
                 }
@@ -211,9 +252,12 @@ class StartActivity : ComponentActivity() {
                     if (!isRecording) {
                         val intent = Intent(this, ProfileActivity::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                        startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
-                            this, 0, 0
-                        ).toBundle())
+                        startActivity(
+                            intent,
+                            androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
+                                this, 0, 0
+                            ).toBundle()
+                        )
                     }
                     true
                 }
@@ -405,22 +449,35 @@ class StartActivity : ComponentActivity() {
                             when (stopReason) {
                                 StopReason.USER, StopReason.TIMER -> {
                                     if (file != null) {
-                                        val recordedSeconds = (System.currentTimeMillis() / 1000 - recordingStartTime).toInt()
+                                        val recordedSeconds =
+                                            (System.currentTimeMillis() / 1000 - recordingStartTime).toInt()
                                         ensureMinimumLocations(recordedSeconds)
 
                                         startActivity(
                                             Intent(this, ReviewViolationActivity::class.java)
                                                 .putExtra("VIDEO_PATH", file.absolutePath)
                                                 .putExtra("START_TIMESTAMP", recordingStartTime)
-                                                .putExtra("LOCATIONS",
-                                                    locationList.map { doubleArrayOf(it.first, it.second) }.toTypedArray()
+                                                .putExtra(
+                                                    "LOCATIONS",
+                                                    locationList.map {
+                                                        doubleArrayOf(
+                                                            it.first,
+                                                            it.second
+                                                        )
+                                                    }.toTypedArray()
                                                 )
                                         )
                                     } else {
-                                        startActivity(Intent(this, PersonalActivity::class.java))
+                                        startActivity(
+                                            Intent(
+                                                this,
+                                                PersonalActivity::class.java
+                                            )
+                                        )
                                     }
                                 }
-                                StopReason.TIMER, StopReason.NONE -> {
+                                // лишний дубль TIMER убрал, оставил только NONE
+                                StopReason.NONE -> {
                                 }
                             }
                         }
@@ -432,7 +489,12 @@ class StartActivity : ComponentActivity() {
 
     private fun ensureMinimumLocations(expectedSeconds: Int) {
         while (locationList.size < expectedSeconds && currentLocation != null) {
-            locationList.add(Pair(currentLocation!!.latitude, currentLocation!!.longitude))
+            locationList.add(
+                Pair(
+                    currentLocation!!.latitude,
+                    currentLocation!!.longitude
+                )
+            )
         }
     }
 
@@ -448,6 +510,7 @@ class StartActivity : ComponentActivity() {
             override fun onTick(millisUntilFinished: Long) {
                 binding.timer.text = (millisUntilFinished / 1000).toString()
             }
+
             override fun onFinish() {
                 stopReason = StopReason.TIMER
                 stopRecording()
@@ -461,16 +524,16 @@ class StartActivity : ComponentActivity() {
         binding.recButtonCard.clearAnimation()
         binding.recButtonInner.animate().cancel()
         binding.recButtonCard.animate().cancel()
-        
+
         // Сбрасываем scale на случай если была прервана предыдущая анимация
         binding.recButtonInner.scaleX = 1f
         binding.recButtonInner.scaleY = 1f
         binding.recButtonCard.scaleX = 1f
         binding.recButtonCard.scaleY = 1f
-        
+
         // Меняем фон
         binding.recButtonInner.setBackgroundResource(R.drawable.rec_button_recording_modern)
-        
+
         // Плавная анимация уменьшения внутренней кнопки
         binding.recButtonInner.animate()
             .scaleX(0.5f)
@@ -505,10 +568,10 @@ class StartActivity : ComponentActivity() {
         binding.recButtonCard.clearAnimation()
         binding.recButtonInner.animate().cancel()
         binding.recButtonCard.animate().cancel()
-        
+
         // Меняем фон обратно на круг
         binding.recButtonInner.setBackgroundResource(R.drawable.rec_button_idle_modern)
-        
+
         // Плавная анимация возврата внутренней кнопки
         binding.recButtonInner.animate()
             .scaleX(1f)

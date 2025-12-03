@@ -67,6 +67,7 @@ class PersonalActivity : ComponentActivity() {
         adapter = ApplicationAdapter { application ->
             val intent = Intent(this, ViolationDetailsActivity::class.java).apply {
                 putExtra("APPLICATION_ID", application.id)
+                putExtra("LOCAL_NUMBER", application.localNumber)
             }
             startActivity(intent)
         }

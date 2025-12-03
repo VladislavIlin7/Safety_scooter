@@ -13,3 +13,5 @@ app/src/main/java/com/example/safyscooter/exp.kt
 app/src/main/java/experiments
 .idea/
 .kotlin/
+app-debug.apk
+SafetyScooter-v1.0.apk

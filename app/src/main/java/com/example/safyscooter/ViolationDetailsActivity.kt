@@ -24,6 +24,7 @@ class ViolationDetailsActivity : ComponentActivity() {
 
     private lateinit var binding: ActivityViolationDetailsBinding
     private var isVideoPlaying = false
+    private var localNumber: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +36,7 @@ class ViolationDetailsActivity : ComponentActivity() {
         }
 
         val applicationId = intent.getLongExtra("APPLICATION_ID", -1L)
+        localNumber = intent.getIntExtra("LOCAL_NUMBER", 0)
         require(applicationId > 0) { "APPLICATION_ID is required" }
 
         loadApplicationDetails(applicationId)
@@ -64,7 +66,8 @@ class ViolationDetailsActivity : ComponentActivity() {
     }
 
     private fun displayApplication(app: Application) {
-        binding.tvTitle.text = "Заявка #${app.localNumber}"
+        val displayNumber = localNumber.takeIf { it > 0 } ?: app.localNumber
+        binding.tvTitle.text = "Заявка #$displayNumber"
         binding.tvDateTime.text = app.getFormattedDate()
         binding.tvStatus.text = app.status
         binding.tvViolationId.text = "#${app.id}"

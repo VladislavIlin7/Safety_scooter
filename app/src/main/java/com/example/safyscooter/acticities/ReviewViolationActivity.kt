@@ -1,27 +1,19 @@
-package com.example.safyscooter
+package com.example.safyscooter.acticities
 
 import android.R
 import android.content.Intent
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.lifecycle.lifecycleScope
+import com.example.safyscooter.network.UploadManager
 import com.example.safyscooter.databinding.ActivityReviewBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import java.io.File
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
-import org.json.JSONArray
-import kotlin.math.roundToInt
 
 class ReviewViolationActivity : ComponentActivity() {
 
@@ -44,7 +36,7 @@ class ReviewViolationActivity : ComponentActivity() {
         startTimestamp = intent.getLongExtra("START_TIMESTAMP", System.currentTimeMillis())
 
         @Suppress("DEPRECATION")
-        val locationsArray = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        val locationsArray = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getSerializableExtra("LOCATIONS", Array<DoubleArray>::class.java)
         } else {
             intent.getSerializableExtra("LOCATIONS") as? Array<DoubleArray>
@@ -179,7 +171,7 @@ class ReviewViolationActivity : ComponentActivity() {
         binding.ivThumb.visibility = View.VISIBLE
         binding.overlayView.visibility = View.VISIBLE
         binding.playButton.visibility = View.VISIBLE
-        binding.playButton.setImageResource(android.R.drawable.ic_media_play)
+        binding.playButton.setImageResource(R.drawable.ic_media_play)
         isVideoPlaying = false
     }
     

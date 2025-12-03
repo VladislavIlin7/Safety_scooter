@@ -1,10 +1,11 @@
-package com.example.safyscooter
+package com.example.safyscooter.acticities
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
+import com.example.safyscooter.R
 import com.example.safyscooter.databinding.ActivityProfileBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +33,7 @@ class ProfileActivity : AppCompatActivity() {
                 R.id.nav_home -> {
                     val intent = Intent(this, StartActivity::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
+                    startActivity(intent, ActivityOptionsCompat.makeCustomAnimation(
                         this, 0, 0
                     ).toBundle())
                     finish()
@@ -41,7 +42,7 @@ class ProfileActivity : AppCompatActivity() {
                 R.id.nav_violations -> {
                     val intent = Intent(this, PersonalActivity::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
+                    startActivity(intent, ActivityOptionsCompat.makeCustomAnimation(
                         this, 0, 0
                     ).toBundle())
                     finish()

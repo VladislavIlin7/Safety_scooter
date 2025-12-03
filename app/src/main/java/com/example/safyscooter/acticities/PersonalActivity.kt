@@ -1,13 +1,18 @@
-package com.example.safyscooter
+package com.example.safyscooter.acticities
 
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.safyscooter.network.ApiService
+import com.example.safyscooter.adapters.ApplicationAdapter
+import com.example.safyscooter.R
 import com.example.safyscooter.databinding.ActivityPersonalBinding
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -42,7 +47,7 @@ class PersonalActivity : ComponentActivity() {
                 R.id.nav_home -> {
                     val intent = Intent(this, StartActivity::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
+                    startActivity(intent, ActivityOptionsCompat.makeCustomAnimation(
                         this, 0, 0
                     ).toBundle())
                     finish()
@@ -52,7 +57,7 @@ class PersonalActivity : ComponentActivity() {
                 R.id.nav_profile -> {
                     val intent = Intent(this, ProfileActivity::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
+                    startActivity(intent, ActivityOptionsCompat.makeCustomAnimation(
                         this, 0, 0
                     ).toBundle())
                     finish()
@@ -90,7 +95,7 @@ class PersonalActivity : ComponentActivity() {
                     app.copy(localNumber = totalApplications - index)
                 }
 
-                withContext(kotlinx.coroutines.Dispatchers.Main) {
+                withContext(Dispatchers.Main) {
                     adapter.submitList(applicationsWithLocalNumbers)
                     binding.swipeRefresh.isRefreshing = false
 
@@ -103,7 +108,7 @@ class PersonalActivity : ComponentActivity() {
                     }
                 }
             } catch (e: Exception) {
-                withContext(kotlinx.coroutines.Dispatchers.Main) {
+                withContext(Dispatchers.Main) {
                     binding.swipeRefresh.isRefreshing = false
                     Toast.makeText(
                         this@PersonalActivity,

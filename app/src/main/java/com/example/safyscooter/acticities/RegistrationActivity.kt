@@ -1,4 +1,4 @@
-package com.example.safyscooter
+package com.example.safyscooter.acticities
 
 import android.app.Activity
 import android.content.Intent
@@ -6,8 +6,11 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
+import com.example.safyscooter.models.AuthResponse
+import com.example.safyscooter.R
+import com.example.safyscooter.models.User
+import com.example.safyscooter.utils.Validators
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Request
@@ -18,33 +21,32 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 
-
-class AuthActivity : Activity() {
+class RegistrationActivity : Activity() {
     private val client = OkHttpClient()
     private val gson = Gson()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        setContentView(R.layout.activity_registration)
 
-        val userPhoneAuth: EditText = findViewById(R.id.user_phone_auth)
-        val userPassAuth: EditText = findViewById(R.id.user_pass_auth)
-        val btnAuth: Button = findViewById(R.id.btn_auth)
-        val cardRegister: View = findViewById(R.id.cardRegister)
+        val userPhone: EditText = findViewById(R.id.user_phone)
+        val userPass: EditText = findViewById(R.id.user_pass)
+        val btnReg: Button = findViewById(R.id.btn_register)
+        val cardLogin: View = findViewById(R.id.cardLogin)
 
-        userPhoneAuth.setText("+7")
-        userPhoneAuth.setSelection(userPhoneAuth.text.length)
+        userPhone.setText("+7")
+        userPhone.setSelection(userPhone.text.length)
 
-        cardRegister.setOnClickListener {
-            val intent = Intent(this, RegistrationActivity::class.java)
+        cardLogin.setOnClickListener {
+            val intent = Intent(this, AuthActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             startActivity(intent)
             finish()
         }
 
-        btnAuth.setOnClickListener {
-            val phoneNumber = userPhoneAuth.text.toString().trim()
-            val password = userPassAuth.text.toString().trim()
+        btnReg.setOnClickListener {
+            val phoneNumber = userPhone.text.toString().trim()
+            val password = userPass.text.toString().trim()
 
             if (phoneNumber.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Не все поля заполнены", Toast.LENGTH_LONG).show()
@@ -67,19 +69,19 @@ class AuthActivity : Activity() {
             val user = User(formattedPhone, password)
 
             CoroutineScope(Dispatchers.IO).launch {
-                AuthUser(user)
+                registerUser(user)
             }
         }
     }
 
-    private suspend fun AuthUser(user: User) {
+    private suspend fun registerUser(user: User) {
         withContext(Dispatchers.IO) {
             try {
                 val jsonBody = gson.toJson(user)
                 val requestBody = jsonBody.toRequestBody("application/json; charset=utf-8".toMediaType())
 
                 val request = Request.Builder()
-                    .url("https://safetyscooter.ru//login")
+                    .url("https://safetyscooter.ru//registration")
                     .post(requestBody)
                     .build()
 
@@ -92,37 +94,28 @@ class AuthActivity : Activity() {
                         saveAccessToken(accessToken)
 
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(this@AuthActivity, "Авторизация успешна!",
+                            Toast.makeText(this@RegistrationActivity, "Регистрация успешна!",
                                 Toast.LENGTH_LONG).show()
-                            val intent = Intent(this@AuthActivity, StartActivity::class.java)
+                            val intent = Intent(this@RegistrationActivity, StartActivity::class.java)
                             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             startActivity(intent)
                             finish()
                         }
-                    } else if (response.code == 404) {
+                    } else if (response.code == 409) {
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(this@AuthActivity, "Неверный номер",
+                            Toast.makeText(this@RegistrationActivity, "Такой пользователь уже есть",
                                 Toast.LENGTH_LONG).show()
-
-                        }
-                    } else if (response.code == 403) {
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(
-                                this@AuthActivity, "Неверный пароль",
-                                Toast.LENGTH_LONG
-                            ).show()
                         }
                     } else {
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(this@AuthActivity, "Ошибка авторизации: ${response.code}",
+                            Toast.makeText(this@RegistrationActivity, "Ошибка регистрации: ${response.code}",
                                 Toast.LENGTH_LONG).show()
-
                         }
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@AuthActivity, "Сетевая ошибка: ${e.message}",
+                    Toast.makeText(this@RegistrationActivity, "Сетевая ошибка: ${e.message}",
                         Toast.LENGTH_LONG).show()
                 }
             }

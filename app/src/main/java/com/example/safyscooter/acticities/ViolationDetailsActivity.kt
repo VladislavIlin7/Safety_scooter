@@ -1,6 +1,6 @@
-package com.example.safyscooter
+package com.example.safyscooter.acticities
 
-import android.content.Intent
+import android.graphics.Typeface
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
@@ -11,7 +11,12 @@ import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.example.safyscooter.network.ApiService
+import com.example.safyscooter.models.Application
+import com.example.safyscooter.R
+import com.example.safyscooter.models.Verdict
 import com.example.safyscooter.databinding.ActivityViolationDetailsBinding
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -50,7 +55,7 @@ class ViolationDetailsActivity : ComponentActivity() {
                 val applications = ApiService.getApplications(accessToken)
                 val application = applications.find { it.id == applicationId }
 
-                withContext(kotlinx.coroutines.Dispatchers.Main) {
+                withContext(Dispatchers.Main) {
                     if (application != null) {
                         displayApplication(application)
                     } else {
@@ -58,7 +63,7 @@ class ViolationDetailsActivity : ComponentActivity() {
                     }
                 }
             } catch (e: Exception) {
-                withContext(kotlinx.coroutines.Dispatchers.Main) {
+                withContext(Dispatchers.Main) {
                     binding.tvStatus.text = "Ошибка загрузки: ${e.message}"
                 }
             }
@@ -162,7 +167,7 @@ class ViolationDetailsActivity : ComponentActivity() {
             text = "Вердикт #$index"
             textSize = 16f
             setTextColor(ContextCompat.getColor(this@ViolationDetailsActivity, R.color.text_primary))
-            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTypeface(null, Typeface.BOLD)
         }
         layout.addView(titleView)
 
@@ -200,7 +205,7 @@ class ViolationDetailsActivity : ComponentActivity() {
             text = value
             textSize = 14f
             setTextColor(ContextCompat.getColor(this@ViolationDetailsActivity, R.color.text_primary))
-            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTypeface(null, Typeface.BOLD)
         }
         rowLayout.addView(valueView)
 
@@ -217,7 +222,7 @@ class ViolationDetailsActivity : ComponentActivity() {
     }
 
     private suspend fun checkVideoAvailability(videoUrl: String, accessToken: String): String {
-        return withContext(kotlinx.coroutines.Dispatchers.IO) {
+        return withContext(Dispatchers.IO) {
             val client = OkHttpClient.Builder()
                 .followRedirects(true)
                 .followSslRedirects(true)
@@ -271,7 +276,7 @@ class ViolationDetailsActivity : ComponentActivity() {
                 val accessToken = getAccessToken()
                 checkVideoAvailability(videoUrl, accessToken)
             } catch (e: Exception) {
-                withContext(kotlinx.coroutines.Dispatchers.Main) {
+                withContext(Dispatchers.Main) {
                     Log.e("ViolationDetails", "Video check failed: ${e.message}", e)
                     binding.videoLoadingProgress.visibility = View.GONE
                     binding.tvVideoError.visibility = View.VISIBLE
@@ -285,7 +290,7 @@ class ViolationDetailsActivity : ComponentActivity() {
                 return@launch
             }
             
-            withContext(kotlinx.coroutines.Dispatchers.Main) {
+            withContext(Dispatchers.Main) {
                 try {
                     Log.d("ViolationDetails", "Loading video from S3: $finalVideoUrl")
                     

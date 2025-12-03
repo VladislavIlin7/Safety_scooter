@@ -1,4 +1,4 @@
-package com.example.safyscooter
+package com.example.safyscooter.data
 
 
 import kotlinx.coroutines.CoroutineDispatcher

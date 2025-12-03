@@ -25,7 +25,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SafetyScooter">
         <activity
-            android:name=".MainActivity"
+            android:name=".acticities.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -34,27 +34,27 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".RegistrationActivity"
+        <activity android:name=".acticities.RegistrationActivity"
             android:screenOrientation="portrait"
             android:exported="false" />
-        <activity android:name=".AuthActivity"
+        <activity android:name=".acticities.AuthActivity"
             android:screenOrientation="portrait"
             android:exported="false" />
-        <activity android:name=".StartActivity"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTop"
-            android:exported="false" />
-        <activity android:name=".PersonalActivity"
+        <activity android:name=".acticities.StartActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             android:exported="false" />
-        <activity android:name=".ReviewViolationActivity"
+        <activity android:name=".acticities.PersonalActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            android:exported="false" />
+        <activity android:name=".acticities.ReviewViolationActivity"
             android:screenOrientation="portrait"
             android:exported="false" />
-        <activity android:name=".ViolationDetailsActivity"
+        <activity android:name=".acticities.ViolationDetailsActivity"
             android:screenOrientation="portrait"
             android:exported="false" />
-        <activity android:name=".ProfileActivity"
+        <activity android:name=".acticities.ProfileActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             android:exported="false" />

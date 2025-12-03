@@ -1,5 +1,6 @@
-package com.example.safyscooter
+package com.example.safyscooter.models
 
+import com.example.safyscooter.R
 import java.text.SimpleDateFormat
 import java.util.*
 

@@ -1,4 +1,4 @@
-package com.example.safyscooter
+package com.example.safyscooter.data
 
 data class ViolationUi(
     val id: Long,             // уникальный id (ts)

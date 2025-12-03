@@ -1,10 +1,12 @@
-package com.example.safyscooter
+package com.example.safyscooter.acticities
 
 import android.Manifest
 import android.animation.ObjectAnimator
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.location.Location
+import android.location.LocationManager
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Handler
@@ -12,6 +14,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.view.View
 import android.view.animation.AnimationUtils
+import android.view.animation.DecelerateInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -24,9 +27,12 @@ import androidx.camera.video.Recorder
 import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
+import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import com.example.safyscooter.R
+import com.example.safyscooter.network.UploadManager
 import com.example.safyscooter.databinding.ActivityStartBinding
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -162,7 +168,7 @@ class StartActivity : ComponentActivity() {
                         binding.tvUploadPercent.text = "${state.progress}%"
                         binding.tvUploadPercent.setTextColor(ContextCompat.getColor(this@StartActivity, R.color.primary))
                         binding.uploadProgressBar.progress = state.progress
-                        binding.uploadProgressBar.progressTintList = android.content.res.ColorStateList.valueOf(
+                        binding.uploadProgressBar.progressTintList = ColorStateList.valueOf(
                             ContextCompat.getColor(this@StartActivity, R.color.primary)
                         )
 
@@ -183,7 +189,7 @@ class StartActivity : ComponentActivity() {
                         binding.tvUploadPercent.text = "✓"
                         binding.tvUploadPercent.setTextColor(ContextCompat.getColor(this@StartActivity, R.color.success))
                         binding.uploadProgressBar.progress = 100
-                        binding.uploadProgressBar.progressTintList = android.content.res.ColorStateList.valueOf(
+                        binding.uploadProgressBar.progressTintList = ColorStateList.valueOf(
                             ContextCompat.getColor(this@StartActivity, R.color.success)
                         )
                     }
@@ -199,7 +205,7 @@ class StartActivity : ComponentActivity() {
                         binding.tvUploadPercent.text = "!"
                         binding.tvUploadPercent.setTextColor(ContextCompat.getColor(this@StartActivity, R.color.error))
                         binding.uploadProgressBar.progress = 0
-                        binding.uploadProgressBar.progressTintList = android.content.res.ColorStateList.valueOf(
+                        binding.uploadProgressBar.progressTintList = ColorStateList.valueOf(
                             ContextCompat.getColor(this@StartActivity, R.color.error)
                         )
 
@@ -254,7 +260,7 @@ class StartActivity : ComponentActivity() {
                     if (!isRecording) {
                         val intent = Intent(this, PersonalActivity::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                        startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
+                        startActivity(intent, ActivityOptionsCompat.makeCustomAnimation(
                             this, 0, 0
                         ).toBundle())
                         finish()
@@ -265,7 +271,7 @@ class StartActivity : ComponentActivity() {
                     if (!isRecording) {
                         val intent = Intent(this, ProfileActivity::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                        startActivity(intent, androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
+                        startActivity(intent, ActivityOptionsCompat.makeCustomAnimation(
                             this, 0, 0
                         ).toBundle())
                         finish()
@@ -317,9 +323,9 @@ class StartActivity : ComponentActivity() {
     }
 
     private fun isLocationEnabled(): Boolean {
-        val locationManager = getSystemService(LOCATION_SERVICE) as android.location.LocationManager
-        return locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) ||
-                locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
     private fun checkLocationServicesAndEnable() {
@@ -556,14 +562,14 @@ class StartActivity : ComponentActivity() {
             .scaleX(0.5f)
             .scaleY(0.5f)
             .setDuration(200)
-            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .setInterpolator(DecelerateInterpolator())
             .start()
 
         binding.recButtonCard.animate()
             .scaleX(1.08f)
             .scaleY(1.08f)
             .setDuration(200)
-            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .setInterpolator(DecelerateInterpolator())
             .start()
 
         binding.pulseRing.visibility = View.VISIBLE
@@ -588,14 +594,14 @@ class StartActivity : ComponentActivity() {
             .scaleX(1f)
             .scaleY(1f)
             .setDuration(200)
-            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .setInterpolator(DecelerateInterpolator())
             .start()
 
         binding.recButtonCard.animate()
             .scaleX(1f)
             .scaleY(1f)
             .setDuration(200)
-            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .setInterpolator(DecelerateInterpolator())
             .start()
 
         binding.pulseRing.clearAnimation()

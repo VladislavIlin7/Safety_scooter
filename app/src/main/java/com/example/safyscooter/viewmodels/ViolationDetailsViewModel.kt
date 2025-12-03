@@ -1,7 +1,9 @@
-package com.example.safyscooter
+package com.example.safyscooter.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.safyscooter.data.ViolationRepository
+import com.example.safyscooter.data.ViolationStore
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map

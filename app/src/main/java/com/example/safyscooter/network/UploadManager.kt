@@ -1,5 +1,7 @@
-package com.example.safyscooter
+package com.example.safyscooter.network
 
+import com.example.safyscooter.data.ViolationStore
+import com.example.safyscooter.data.ViolationUi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +17,9 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import okhttp3.MediaType
 import java.util.concurrent.atomic.AtomicBoolean
 
 object UploadManager {
@@ -87,7 +91,12 @@ object UploadManager {
                         // Добавляем локально в историю
                         val nextIndex = ViolationStore.items.size + 1
                         ViolationStore.items.add(
-                            0, ViolationUi(id = timestamp, title = "нарушение $nextIndex", timestamp = timestamp)
+                            0,
+                            ViolationUi(
+                                id = timestamp,
+                                title = "нарушение $nextIndex",
+                                timestamp = timestamp
+                            )
                         )
                         _uploadState.value = UploadState.Success
                     } else {
@@ -100,7 +109,7 @@ object UploadManager {
                 isUploading.set(false)
                 // Сбрасываем статус Success через пару секунд, чтобы скрыть плашку
                 if (_uploadState.value is UploadState.Success) {
-                    kotlinx.coroutines.delay(4000)
+                    delay(4000)
                     _uploadState.value = UploadState.Idle
                 }
             }
@@ -115,7 +124,7 @@ object UploadManager {
 
     private class ProgressRequestBody(
         private val file: File,
-        private val contentType: okhttp3.MediaType?,
+        private val contentType: MediaType?,
         private val progressListener: (bytesWritten: Long, contentLength: Long) -> Unit
     ) : RequestBody() {
         override fun contentType() = contentType

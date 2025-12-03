@@ -1,21 +1,16 @@
 package com.example.safyscooter.data
 
+// Модель одного нарушения, которое мы храним локально
 data class ViolationUi(
-    val id: Long,             // уникальный id (ts)
-    val title: String,        // "нарушение 1", ...
-    val timestamp: Long,      // время записи
-    val status: String = "статус в разработке" // начальный статус
+    val id: Long,              // уникальный ID (обычно timestamp)
+    val title: String,         // название: "нарушение 1"
+    val timestamp: Long,       // время записи
+    val status: String = "статус в разработке"  // начальный статус
 )
 
+// Простое локальное хранилище нарушений
 object ViolationStore {
-    /** новые сверху */
+    // Список всех нарушений (меняемый) — новые добавляем сверху
     val items: MutableList<ViolationUi> = mutableListOf()
-
-    fun getById(id: Long): ViolationUi? = items.firstOrNull { it.id == id }
-
-    fun updateStatus(id: Long, newStatus: String) {
-        val idx = items.indexOfFirst { it.id == id }
-        if (idx >= 0) items[idx] = items[idx].copy(status = newStatus)
-    }
 }
 

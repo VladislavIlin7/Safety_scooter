@@ -17,57 +17,59 @@ import java.util.*
 
 class ReviewViolationActivity : ComponentActivity() {
 
-    private lateinit var binding: ActivityReviewBinding
-    private var videoPath: String? = null
-    private var startTimestamp: Long = 0L
-    private var locations: List<Pair<Double, Double>> = emptyList()
-    private var isVideoPlaying = false
+    private lateinit var binding: ActivityReviewBinding // привязываем layout
+    private var videoPath: String? = null // путь к видеофайлу
+    private var startTimestamp: Long = 0L // время начала записи
+    private var locations: List<Pair<Double, Double>> = emptyList() // список координат
+    private var isVideoPlaying = false // флаг проигрывания видео
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityReviewBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(binding.root) // показываем экран
 
         binding.toolbar.setNavigationOnClickListener {
-            finish()
+            finish() // кнопка назад
         }
 
-        videoPath = intent.getStringExtra("VIDEO_PATH")
-        startTimestamp = intent.getLongExtra("START_TIMESTAMP", System.currentTimeMillis())
+        videoPath = intent.getStringExtra("VIDEO_PATH") // путь видео из Intent
+        startTimestamp = intent.getLongExtra("START_TIMESTAMP", System.currentTimeMillis()) // время старта
 
         @Suppress("DEPRECATION")
         val locationsArray = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // получаем массив координат для новых API
             intent.getSerializableExtra("LOCATIONS", Array<DoubleArray>::class.java)
         } else {
+            // для старых API
             intent.getSerializableExtra("LOCATIONS") as? Array<DoubleArray>
         }
-        locations = locationsArray?.map {
-            Pair(it[0], it[1])
-        } ?: emptyList()
 
-        val (thumb, durationSec) = extractMeta(videoPath)
-        if (thumb != null) binding.ivThumb.setImageBitmap(thumb)
-        binding.tvDuration.text = "${durationSec} сек"
-        binding.tvDate.text = formatTs(startTimestamp * 1000)
-        
-        // Показываем реальный размер файла
+        locations = locationsArray?.map { Pair(it[0], it[1]) } ?: emptyList() // переводим в пары
+
+        val (thumb, durationSec) = extractMeta(videoPath) // берём превью и длительность
+        if (thumb != null) binding.ivThumb.setImageBitmap(thumb) // показываем превью
+
+        binding.tvDuration.text = "${durationSec} сек" // показываем длительность
+        binding.tvDate.text = formatTs(startTimestamp * 1000) // дата записи
+
+        // показываем размер файла
         val videoFile = File(videoPath ?: "")
         if (videoFile.exists()) {
             val fileSizeInMB = videoFile.length() / (1024.0 * 1024.0)
             binding.tvFileSize.text = String.format("%.2f MB", fileSizeInMB)
         } else {
-            binding.tvFileSize.text = "Н/Д"
+            binding.tvFileSize.text = "Н/Д" // если файл не найден
         }
-        
-        // Настройка просмотра видео
-        setupVideoPlayer()
+
+        setupVideoPlayer() // настраиваем просмотр видео
 
         binding.btnSend.setOnClickListener {
+            // отправка видео
             val accessToken = getAccessToken()
             if (accessToken.isNotBlank() && videoPath != null) {
                 UploadManager.startUpload(accessToken, videoPath!!, startTimestamp, locations)
-                
                 Toast.makeText(this, "Загрузка началась в фоне", Toast.LENGTH_SHORT).show()
+
                 val intent = Intent(this, StartActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 startActivity(intent)
@@ -78,6 +80,7 @@ class ReviewViolationActivity : ComponentActivity() {
         }
 
         binding.btnDelete.setOnClickListener {
+            // удаление файла
             videoPath?.let { File(it).delete() }
             val intent = Intent(this, StartActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -86,25 +89,26 @@ class ReviewViolationActivity : ComponentActivity() {
         }
     }
 
-    // Удаляем локальный uploadViolation и ProgressRequestBody - они теперь в UploadManager
-
     private fun getAccessToken(): String {
+        // достаём сохранённый токен
         val sharedPref = getSharedPreferences("app_prefs", MODE_PRIVATE)
         return sharedPref.getString("access_token", "") ?: ""
     }
 
     private fun goToPersonal() {
-        startActivity(Intent(this, PersonalActivity::class.java))
+        // переход в список заявок
+        startActivity(Intent(this, ViolationsActivity::class.java))
         finish()
     }
 
     private fun extractMeta(path: String?): Pair<Bitmap?, Int> {
+        // получаем превью и длительность видео
         if (path.isNullOrEmpty()) return Pair(null, 0)
         val r = MediaMetadataRetriever()
         return try {
             r.setDataSource(path)
             val durMs = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
-            val bmp = r.getFrameAtTime(0)
+            val bmp = r.getFrameAtTime(0) // получаем первый кадр
             Pair(bmp, (durMs / 1000).toInt())
         } catch (_: Throwable) {
             Pair(null, 0)
@@ -114,47 +118,40 @@ class ReviewViolationActivity : ComponentActivity() {
     }
 
     private fun formatTs(ts: Long): String =
+        // переводим timestamp в понятную дату
         SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(ts))
-    
+
     private fun setupVideoPlayer() {
+        // обработка кликов по области превью
         binding.videoPreviewCard.setOnClickListener {
-            if (!isVideoPlaying) {
-                playVideo()
-            } else {
-                pauseVideo()
-            }
+            if (!isVideoPlaying) playVideo() else pauseVideo()
         }
-        
+
         binding.playButton.setOnClickListener {
-            if (!isVideoPlaying) {
-                playVideo()
-            } else {
-                pauseVideo()
-            }
+            if (!isVideoPlaying) playVideo() else pauseVideo()
         }
     }
-    
+
     private fun playVideo() {
+        // запускаем воспроизведение видео
         videoPath?.let { path ->
             binding.videoView.setVideoPath(path)
             binding.videoView.visibility = View.VISIBLE
             binding.ivThumb.visibility = View.GONE
             binding.overlayView.visibility = View.GONE
             binding.playButton.visibility = View.GONE
-            
+
             binding.videoView.setOnPreparedListener { mediaPlayer ->
-                mediaPlayer.isLooping = true
+                mediaPlayer.isLooping = true // зацикливаем
                 binding.videoView.start()
                 isVideoPlaying = true
             }
-            
+
             binding.videoView.setOnCompletionListener {
-                // Видео зациклено, но на случай если что-то пойдет не так
-                if (!isVideoPlaying) {
-                    pauseVideo()
-                }
+                // на случай, если проигрывание завершится
+                if (!isVideoPlaying) pauseVideo()
             }
-            
+
             binding.videoView.setOnErrorListener { _, _, _ ->
                 Toast.makeText(this, "Ошибка воспроизведения видео", Toast.LENGTH_SHORT).show()
                 pauseVideo()
@@ -162,8 +159,9 @@ class ReviewViolationActivity : ComponentActivity() {
             }
         }
     }
-    
+
     private fun pauseVideo() {
+        // ставим видео на паузу
         if (binding.videoView.isPlaying) {
             binding.videoView.pause()
         }
@@ -174,18 +172,16 @@ class ReviewViolationActivity : ComponentActivity() {
         binding.playButton.setImageResource(R.drawable.ic_media_play)
         isVideoPlaying = false
     }
-    
+
     override fun onPause() {
         super.onPause()
-        if (isVideoPlaying) {
-            pauseVideo()
-        }
+        if (isVideoPlaying) pauseVideo() // если свернули — ставим паузу
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         if (binding.videoView.isPlaying) {
-            binding.videoView.stopPlayback()
+            binding.videoView.stopPlayback() // останавливаем проигрывание
         }
     }
 }

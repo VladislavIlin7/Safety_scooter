@@ -46,78 +46,84 @@ import java.util.concurrent.Executors
 
 class StartActivity : ComponentActivity() {
 
-    private lateinit var binding: ActivityStartBinding
-    private var recording: Recording? = null
-    private var videoCapture: VideoCapture<Recorder>? = null
-    private var countDownTimer: CountDownTimer? = null
-    private var isRecording = false
-    private var lastVideoFile: File? = null
-    private var recordingStartTime: Long = 0
-    private var pulseAnimator: ObjectAnimator? = null
-    private var locationSettingsShownInThisSession = false
-    private var returningFromSettings = false
+    private lateinit var binding: ActivityStartBinding   // биндинг для доступа к вью
+    private var recording: Recording? = null             // текущая запись видео
+    private var videoCapture: VideoCapture<Recorder>? = null  // объект для записи видео
+    private var countDownTimer: CountDownTimer? = null   // таймер обратного отсчёта 20 сек
+    private var isRecording = false                      // флаг: сейчас идёт запись или нет
+    private var lastVideoFile: File? = null              // последний записанный видеофайл
+    private var recordingStartTime: Long = 0             // время начала записи (в секундах)
+    private var pulseAnimator: ObjectAnimator? = null    // анимация пульса круговой обводки
+    private var locationSettingsShownInThisSession = false // показывали ли экран настроек гео
+    private var returningFromSettings = false            // вернулись ли мы из настроек
 
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private val locationList = mutableListOf<Pair<Double, Double>>()
-    private var isTrackingLocation = false
-    private var locationServiceRequested = false
+    private lateinit var fusedLocationClient: FusedLocationProviderClient // клиент геолокации
+    private val locationList = mutableListOf<Pair<Double, Double>>()      // список координат (lat, lon)
+    private var isTrackingLocation = false             // флаг: сейчас слушаем обновления гео
+    private var locationServiceRequested = false       // флаг: уже просили включить гео
 
     private val locationRequest = LocationRequest.Builder(
-        Priority.PRIORITY_HIGH_ACCURACY, 100
+        Priority.PRIORITY_HIGH_ACCURACY, 100          // частые обновления, высокая точность
     ).setMinUpdateIntervalMillis(50).build()
 
-    private val locationCallback = object : LocationCallback() {
+    private val locationCallback = object : LocationCallback() { // колбэк на новые координаты
         override fun onLocationResult(locationResult: LocationResult) {
             locationResult.lastLocation?.let { location ->
-                updateCurrentLocation(location)
+                updateCurrentLocation(location)        // обновляем текущую локацию
             }
         }
     }
 
-    private var currentLocation: Location? = null
-    private var locationUpdatesStopped = false
-    private val locationExecutor = Executors.newSingleThreadScheduledExecutor()
-    private var guaranteedLocationTimer: CountDownTimer? = null
+    private var currentLocation: Location? = null      // последняя известная локация
+    private var locationUpdatesStopped = false         // флаг: остановили ли обновление гео
+    private val locationExecutor = Executors.newSingleThreadScheduledExecutor() // отдельный поток
+    private var guaranteedLocationTimer: CountDownTimer? = null // таймер для гарантированного набора координат
 
+    // причина остановки записи
     private enum class StopReason { NONE, USER, TIMER }
     private var stopReason: StopReason = StopReason.NONE
 
+    // запрос разрешения камеры (при первом запуске)
     private val requestCameraPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
-                startCamera()
+                startCamera()                          // если дали камеру — запускаем предпросмотр
             }
-            checkAndRequestLocationPermission()
+            checkAndRequestLocationPermission()        // после этого проверяем геолокацию
         }
 
+    // запрос только камеры, когда уже в активности
     private val requestCameraOnlyLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
-                startCamera()
-                checkAllPermissionsAndStartRecording()
+                startCamera()                          // запускаем камеру
+                checkAllPermissionsAndStartRecording() // и пробуем начать запись
             }
         }
 
+    // запрос разрешения на геолокацию (общий)
     private val requestLocationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 if (!isLocationEnabled() && !locationServiceRequested) {
                     locationServiceRequested = true
-                    checkLocationServicesAndEnable()
+                    checkLocationServicesAndEnable()   // просим включить геолокацию в настройках
                 }
             }
         }
 
+    // запрос только геолокации перед записью
     private val requestLocationOnlyLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 if (!isLocationEnabled()) {
                     locationServiceRequested = false
-                    checkLocationServicesAndEnable()
+                    checkLocationServicesAndEnable()   // открываем настройки гео
                 } else {
                     if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                         == PackageManager.PERMISSION_GRANTED
                     ) {
+                        // небольшая задержка и старт записи
                         Handler(Looper.getMainLooper()).postDelayed({
                             startRecording()
                         }, 200)
@@ -126,18 +132,21 @@ class StartActivity : ComponentActivity() {
             }
         }
 
+    // лаунчер открытия настроек геолокации
     private val locationSettingsLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            // результат нам тут не важен, просто возвращаемся
         }
 
     override fun onResume() {
         super.onResume()
 
-        if (returningFromSettings) {
+        if (returningFromSettings) { // если возвращаемся из настроек
             returningFromSettings = false
 
             Handler(Looper.getMainLooper()).postDelayed({
                 if (isLocationEnabled()) {
+                    // если гео включили — сбрасываем флаг показа настроек
                     locationSettingsShownInThisSession = false
                 }
             }, 300)
@@ -148,17 +157,18 @@ class StartActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         if (savedInstanceState != null) {
-            returningFromSettings = true
+            returningFromSettings = true   // помечаем, что активити пересоздавалась (могли быть настройки)
         }
 
-        binding = ActivityStartBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        binding = ActivityStartBinding.inflate(layoutInflater) // инициализация биндинга
+        setContentView(binding.root)                           // устанавливаем разметку
 
+        // слушаем состояние загрузки видео из UploadManager
         lifecycleScope.launch {
             UploadManager.uploadState.collect { state ->
                 when (state) {
                     is UploadManager.UploadState.Idle -> {
-                        binding.uploadStatusCard.visibility = View.GONE
+                        binding.uploadStatusCard.visibility = View.GONE // блок загрузки скрыт
                     }
                     is UploadManager.UploadState.Uploading -> {
                         binding.uploadStatusCard.visibility = View.VISIBLE
@@ -209,6 +219,7 @@ class StartActivity : ComponentActivity() {
                             ContextCompat.getColor(this@StartActivity, R.color.error)
                         )
 
+                        // через 5 секунд сбрасываем состояние загрузки
                         binding.uploadStatusCard.postDelayed({
                             UploadManager.resetState()
                         }, 5000)
@@ -218,19 +229,20 @@ class StartActivity : ComponentActivity() {
         }
 
         binding.btnCloseUpload.setOnClickListener {
-            UploadManager.resetState()
+            UploadManager.resetState() // вручную свернуть/очистить блок загрузки
         }
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this) // инициализация клиента гео
 
+        // логика старта камеры и гео при запуске экрана
         if (!returningFromSettings) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED
             ) {
-                startCamera()
-                checkAndRequestLocationPermission()
+                startCamera()                       // если есть камера — стартуем предпросмотр
+                checkAndRequestLocationPermission() // и запрашиваем гео
             } else {
-                requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA) // просим разрешение камеры
             }
         } else {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
@@ -240,25 +252,27 @@ class StartActivity : ComponentActivity() {
             }
         }
 
+        // обработка нажатия на большую кнопку записи
         binding.btnRec.setOnClickListener {
-            if (!isRecording) {
-                checkAllPermissionsAndStartRecording()
+            if (!isRecording) {                     // если сейчас не пишем
+                checkAllPermissionsAndStartRecording() // проверяем все разрешения и стартуем
             } else {
-                stopReason = StopReason.USER
-                stopRecording()
+                stopReason = StopReason.USER        // пользователь сам остановил запись
+                stopRecording()                     // останавливаем
             }
         }
 
+        // нижняя навигация — текущий экран "домой"
         binding.bottomNavigation.selectedItemId = R.id.nav_home
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
-                    finish()
+                    finish()                        // если снова "домой" — просто закрываем активити
                     true
                 }
                 R.id.nav_violations -> {
-                    if (!isRecording) {
-                        val intent = Intent(this, PersonalActivity::class.java)
+                    if (!isRecording) {             // нельзя уйти пока идёт запись
+                        val intent = Intent(this, ViolationsActivity::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         startActivity(intent, ActivityOptionsCompat.makeCustomAnimation(
                             this, 0, 0
@@ -283,38 +297,41 @@ class StartActivity : ComponentActivity() {
         }
     }
 
+    // проверяем все разрешения и только потом стартуем запись
     private fun checkAllPermissionsAndStartRecording() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            requestCameraOnlyLauncher.launch(Manifest.permission.CAMERA)
+            requestCameraOnlyLauncher.launch(Manifest.permission.CAMERA) // просим камеру
             return
         }
 
         if (!hasLocationPermission()) {
-            requestLocationOnlyLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            requestLocationOnlyLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION) // просим гео
             return
         }
 
         if (!isLocationEnabled()) {
-            // Сбрасываем флаг для нового шанса при нажатии кнопки
+            // сбрасываем флаг, чтобы снова показать настройки гео
             locationSettingsShownInThisSession = false
-            checkLocationServicesAndEnable()
+            checkLocationServicesAndEnable() // открываем настройки
             return
         }
 
-        startRecording()
+        startRecording() // если всё ок — начинаем запись
     }
 
+    // проверяем разрешение на геолокацию и при необходимости просим
     private fun checkAndRequestLocationPermission() {
         if (!hasLocationPermission()) {
             requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         } else if (!isLocationEnabled() && !locationServiceRequested) {
             locationServiceRequested = true
-            checkLocationServicesAndEnable()
+            checkLocationServicesAndEnable() // просим включить гео в настройках
         }
     }
 
+    // есть ли у приложения разрешение на гео
     private fun hasLocationPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             this,
@@ -322,24 +339,27 @@ class StartActivity : ComponentActivity() {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    // включены ли вообще службы геолокации на устройстве
     private fun isLocationEnabled(): Boolean {
         val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
                 locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
+    // проверяем и при необходимости открываем настройки геолокации
     private fun checkLocationServicesAndEnable() {
         if (!isLocationEnabled() && !locationSettingsShownInThisSession) {
             locationSettingsShownInThisSession = true
-            val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+            val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS) // экран настроек гео
             locationSettingsLauncher.launch(intent)
         } else if (!isLocationEnabled()) {
-            return
+            return // гео всё ещё выключено — просто выходим
         } else {
-            return
+            return // гео уже включено — ничего не делаем
         }
     }
 
+    // обновляем текущую локацию и добавляем её в список при записи
     private fun updateCurrentLocation(location: Location) {
         currentLocation = location
 
@@ -348,13 +368,14 @@ class StartActivity : ComponentActivity() {
         }
     }
 
+    // запускаем отслеживание геолокации
     private fun startLocationTracking() {
         if (!isTrackingLocation && hasLocationPermission() && isLocationEnabled()) {
             try {
                 if (hasLocationPermission()) {
                     fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                         location?.let {
-                            updateCurrentLocation(it)
+                            updateCurrentLocation(it) // сразу сохраняем последнюю известную точку
                         }
                     }
                 }
@@ -368,30 +389,32 @@ class StartActivity : ComponentActivity() {
                 locationUpdatesStopped = false
 
             } catch (securityException: SecurityException) {
-                checkAndRequestLocationPermission()
+                checkAndRequestLocationPermission() // если ошибка — снова проверяем разрешения
             }
         }
     }
 
+    // таймер, который во время записи следит, чтобы на каждый секунды была координата
     private fun startGuaranteedLocationCollection() {
         guaranteedLocationTimer?.cancel()
 
-        guaranteedLocationTimer = object : CountDownTimer(20000, 1000) {
+        guaranteedLocationTimer = object : CountDownTimer(20000, 1000) { // 20 секунд, шаг 1 секунда
             override fun onTick(millisUntilFinished: Long) {
                 if (isRecording) {
                     val secondsPassed = (20000 - millisUntilFinished) / 1000
-                    ensureLocationForSecond(secondsPassed.toInt())
+                    ensureLocationForSecond(secondsPassed.toInt()) // проверяем координаты на текущую секунду
                 }
             }
 
             override fun onFinish() {
                 if (isRecording) {
-                    ensureLocationForSecond(20)
+                    ensureLocationForSecond(20) // на всякий случай проверяем 20-ю секунду
                 }
             }
         }.start()
     }
 
+    // гарантируем, что для указанной секунды есть хотя бы одна координата
     private fun ensureLocationForSecond(second: Int) {
         val expectedSize = second + 1
 
@@ -407,12 +430,14 @@ class StartActivity : ComponentActivity() {
                             }
                         }
                     } catch (securityException: SecurityException) {
+                        // игнорируем ошибку безопасности
                     }
                 }
             }
         }
     }
 
+    // останавливаем получение координат
     private fun stopLocationTracking() {
         if (isTrackingLocation) {
             fusedLocationClient.removeLocationUpdates(locationCallback)
@@ -422,40 +447,42 @@ class StartActivity : ComponentActivity() {
         }
     }
 
+    // подготавливаем и запускаем камеру (предпросмотр)
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
 
             val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(binding.previewView.surfaceProvider)
+                it.setSurfaceProvider(binding.previewView.surfaceProvider) // связываем с виджетом превью
             }
 
             val recorder = Recorder.Builder()
-                .setQualitySelector(QualitySelector.from(Quality.HD))
+                .setQualitySelector(QualitySelector.from(Quality.HD)) // качество HD
                 .build()
             videoCapture = VideoCapture.withOutput(recorder)
 
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA // используем заднюю камеру
 
             cameraProvider.unbindAll()
             cameraProvider.bindToLifecycle(this, cameraSelector, preview, videoCapture)
         }, ContextCompat.getMainExecutor(this))
     }
 
+    // старт записи видео
     private fun startRecording() {
         val vc = videoCapture ?: return
-        val videoFile = File(externalCacheDir, "video_${System.currentTimeMillis()}.mp4")
+        val videoFile = File(externalCacheDir, "video_${System.currentTimeMillis()}.mp4") // создаём файл
         lastVideoFile = videoFile
         stopReason = StopReason.NONE
 
-        recordingStartTime = System.currentTimeMillis() / 1000
+        recordingStartTime = System.currentTimeMillis() / 1000 // фиксируем время начала записи (секунды)
 
-        locationList.clear()
-        currentLocation = null
+        locationList.clear()      // очищаем список координат
+        currentLocation = null    // сбрасываем текущую локацию
 
-        startLocationTracking()
-        startGuaranteedLocationCollection()
+        startLocationTracking()   // запускаем отслеживание гео
+        startGuaranteedLocationCollection() // включаем таймер гарантированных координат
 
         if (hasLocationPermission()) {
             try {
@@ -465,10 +492,11 @@ class StartActivity : ComponentActivity() {
                     }
                 }
             } catch (securityException: SecurityException) {
+                // игнорируем ошибку
             }
         }
 
-        val outputOptions = FileOutputOptions.Builder(videoFile).build()
+        val outputOptions = FileOutputOptions.Builder(videoFile).build() // куда записывать видео
 
         recording = vc.output
             .prepareRecording(this, outputOptions)
@@ -476,28 +504,29 @@ class StartActivity : ComponentActivity() {
                 when (event) {
                     is VideoRecordEvent.Start -> {
                         isRecording = true
-                        animateRecordingStart()
+                        animateRecordingStart()          // визуальная анимация старта
                         binding.timerCard.isVisible = true
                         binding.timer.isVisible = true
-                        startCountdownTimer()
+                        startCountdownTimer()            // запускаем таймер 20 секунд
                     }
                     is VideoRecordEvent.Finalize -> {
-                        stopLocationTracking()
+                        stopLocationTracking()           // остановить гео после записи
 
                         val file = lastVideoFile
                         isRecording = false
-                        animateRecordingStop()
+                        animateRecordingStop()           // анимация окончания записи
                         binding.timerCard.isVisible = false
                         binding.timer.isVisible = false
                         countDownTimer?.cancel()
 
-                        if (!event.hasError()) {
+                        if (!event.hasError()) {         // если запись прошла без ошибки
                             when (stopReason) {
                                 StopReason.USER, StopReason.TIMER -> {
                                     if (file != null) {
                                         val recordedSeconds = (System.currentTimeMillis() / 1000 - recordingStartTime).toInt()
-                                        ensureMinimumLocations(recordedSeconds)
+                                        ensureMinimumLocations(recordedSeconds) // дозаполняем координаты при необходимости
 
+                                        // запускаем экран проверки нарушения и передаём видео + координаты
                                         startActivity(
                                             Intent(this, ReviewViolationActivity::class.java)
                                                 .putExtra("VIDEO_PATH", file.absolutePath)
@@ -507,10 +536,12 @@ class StartActivity : ComponentActivity() {
                                                 )
                                         )
                                     } else {
-                                        startActivity(Intent(this, PersonalActivity::class.java))
+                                        // если файла нет — возвращаемся к списку нарушений
+                                        startActivity(Intent(this, ViolationsActivity::class.java))
                                     }
                                 }
                                 StopReason.TIMER, StopReason.NONE -> {
+                                    // тут логика не выполняется, оставлено как есть
                                 }
                             }
                         }
@@ -520,31 +551,35 @@ class StartActivity : ComponentActivity() {
             }
     }
 
+    // если координат меньше, чем секунд записи — дублируем последнюю точку
     private fun ensureMinimumLocations(expectedSeconds: Int) {
         while (locationList.size < expectedSeconds && currentLocation != null) {
             locationList.add(Pair(currentLocation!!.latitude, currentLocation!!.longitude))
         }
     }
 
+    // остановка записи видео
     private fun stopRecording() {
         recording?.stop()
         recording = null
         countDownTimer?.cancel()
     }
 
+    // запускаем таймер 20 секунд, который показывает оставшееся время на экране
     private fun startCountdownTimer() {
         countDownTimer?.cancel()
-        countDownTimer = object : CountDownTimer(20_000, 1_000) {
+        countDownTimer = object : CountDownTimer(20_000, 1_000) { // 20 секунд по 1
             override fun onTick(millisUntilFinished: Long) {
-                binding.timer.text = (millisUntilFinished / 1000).toString()
+                binding.timer.text = (millisUntilFinished / 1000).toString() // обновляем текст таймера
             }
             override fun onFinish() {
-                stopReason = StopReason.TIMER
-                stopRecording()
+                stopReason = StopReason.TIMER   // запись закончилась по таймеру
+                stopRecording()                 // останавливаем запись
             }
         }.start()
     }
 
+    // анимация при старте записи (кнопка меняется на квадрат и пульсирующее кольцо)
     private fun animateRecordingStart() {
         binding.recButtonInner.clearAnimation()
         binding.recButtonCard.clearAnimation()
@@ -556,7 +591,7 @@ class StartActivity : ComponentActivity() {
         binding.recButtonCard.scaleX = 1f
         binding.recButtonCard.scaleY = 1f
 
-        binding.recButtonInner.setBackgroundResource(R.drawable.rec_button_recording_modern)
+        binding.recButtonInner.setBackgroundResource(R.drawable.rec_button_recording_modern) // стиль "запись"
 
         binding.recButtonInner.animate()
             .scaleX(0.5f)
@@ -574,21 +609,22 @@ class StartActivity : ComponentActivity() {
 
         binding.pulseRing.visibility = View.VISIBLE
         val pulseAnimation = AnimationUtils.loadAnimation(this, R.anim.pulse_animation)
-        binding.pulseRing.startAnimation(pulseAnimation)
+        binding.pulseRing.startAnimation(pulseAnimation) // запускаем анимацию пульса вокруг кнопки
 
         binding.tvHint.animate()
-            .alpha(0f)
+            .alpha(0f)            // подсказка исчезает при начале записи
             .setDuration(200)
             .start()
     }
 
+    // анимация при остановке записи (кнопка возвращается в исходное состояние)
     private fun animateRecordingStop() {
         binding.recButtonInner.clearAnimation()
         binding.recButtonCard.clearAnimation()
         binding.recButtonInner.animate().cancel()
         binding.recButtonCard.animate().cancel()
 
-        binding.recButtonInner.setBackgroundResource(R.drawable.rec_button_idle_modern)
+        binding.recButtonInner.setBackgroundResource(R.drawable.rec_button_idle_modern) // стиль "ожидание"
 
         binding.recButtonInner.animate()
             .scaleX(1f)
@@ -605,20 +641,20 @@ class StartActivity : ComponentActivity() {
             .start()
 
         binding.pulseRing.clearAnimation()
-        binding.pulseRing.visibility = View.GONE
+        binding.pulseRing.visibility = View.GONE        // убираем пульсирующее кольцо
 
         binding.tvHint.animate()
-            .alpha(1f)
+            .alpha(1f)            // возвращаем подсказку
             .setDuration(200)
             .start()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        stopLocationTracking()
-        locationExecutor.shutdown()
-        guaranteedLocationTimer?.cancel()
-        pulseAnimator?.cancel()
-        binding.pulseRing.clearAnimation()
+        stopLocationTracking()          // на всякий случай выключаем гео
+        locationExecutor.shutdown()     // останавливаем отдельный executor
+        guaranteedLocationTimer?.cancel() // отменяем таймер координат
+        pulseAnimator?.cancel()         // отменяем анимацию пульса (если вдруг была)
+        binding.pulseRing.clearAnimation() // чистим анимации у вью
     }
 }
